@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>湿地项目 · 本机启动状态</title>
+    <style>
+      body {
+        font:
+          17px/1.7 system-ui,
+          sans-serif;
+        max-width: 720px;
+        margin: 8vh auto;
+        padding: 24px;
+        color: #203e36;
+        background: #f4f7f2;
+      }
+      h1 {
+        font-size: 30px;
+      }
+      button,
+      a {
+        font: inherit;
+      }
+      button,
+      .open {
+        display: inline-block;
+        padding: 10px 18px;
+        border: 1px solid #305e4c;
+        border-radius: 8px;
+        margin: 8px 12px 8px 0;
+        background: #fff;
+        color: #244c3d;
+      }
+      .open {
+        background: #244c3d;
+        color: #fff;
+        text-decoration: none;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+      }
+      small {
+        display: block;
+        color: #5b675d;
+      }
+      pre {
+        white-space: pre-wrap;
+      }
+      a[hidden] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>湿地项目 · 本机启动状态</h1>
+    <p id="message" role="status" aria-live="polite">正在读取启动状态…</p>
+    <a
+      id="scene"
+      class="open"
+      href="/?planner=3b"
+      target="_blank"
+      rel="noopener"
+      hidden
+      >打开3B场景页面</a
+    ><button id="stop">停止本项目</button>
+    <p>网页默认选中本地 Qwen2.5 3B。输入描述后，先审阅参数，再确认生成场景。</p>
+    <small
+      >3B 采用 Qwen Research
+      许可，用于本地研究与评估。权重来自此前核验的官方固定版本，启动时重新校验
+      SHA-256；不会自动下载。</small
+    >
+    <p>
+      用完请点击“停止本项目”或双击文件夹里的“停止湿地项目.command”。只关闭网页标签不会停止模型。关闭启动终端或按
+      Ctrl-C 也会停止本次服务。
+    </p>
+    <details>
+      <summary>运行状态</summary>
+      <pre id="detail"></pre>
+    </details>
+    <script type="module">
+      const message = document.querySelector("#message"),
+        scene = document.querySelector("#scene"),
+        stop = document.querySelector("#stop"),
+        detail = document.querySelector("#detail");
+      let stopping = false;
+      async function update() {
+        if (stopping) return;
+        try {
+          const r = await fetch("/_local/status.json", { cache: "no-store" });
+          if (!r.ok) throw Error();
+          const s = await r.json();
+          message.textContent = s.message;
+          scene.hidden = s.phase !== "ready";
+          detail.textContent = `状态：${s.phase}\n模型：${s.model}\n${s.verified ? "权重摘要：已通过固定SHA-256校验" : "权重摘要：待核验"}\n${s.resources ? "内存压力：" + s.resources.pressure + "（1为正常）" : ""}\n就绪仅表示服务已加载；规划结果仍需人工审阅。`;
+        } catch {
+          message.textContent =
+            "启动器已停止或连接断开。请查看启动终端；需要重新使用时双击启动入口。";
+          scene.hidden = true;
+        }
+      }
+      stop.onclick = async () => {
+        stop.disabled = true;
+        try {
+          const r = await fetch("/_local/stop", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: "{}",
+          });
+          if (!r.ok) throw Error();
+          stopping = true;
+          scene.hidden = true;
+          message.textContent =
+            "已发出停止请求。请以启动终端的“已停止”提示为准，随后可关闭这些网页。";
+        } catch {
+          message.textContent =
+            "无法发送停止请求，请双击“停止湿地项目.command”或在启动终端按Ctrl-C。";
+          stop.disabled = false;
+        }
+      };
+      await update();
+      setInterval(update, 1500);
+    </script>
+  </body>
+</html>

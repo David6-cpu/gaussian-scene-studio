@@ -1,0 +1,72 @@
+{
+  "sourceRevision": "f8c5eeae5ff5410dc537a27762c8927ba2fd29a2",
+  "sourceSha256": "c6999cae22a6da0ccac6a8964af04d4d219266aac075930769557ab13d3603a2",
+  "sourceBytes": 234855616,
+  "sourceCount": 7339238,
+  "selection": {
+    "type": "continuous reference-camera frustum crop by Gaussian centers",
+    "referencePhoto": "rock/images/0001.png",
+    "frameId": 1,
+    "corePixels": [
+      320,
+      720,
+      730,
+      900
+    ],
+    "outerPixels": [
+      290,
+      690,
+      760,
+      930
+    ],
+    "depthRangeSourceUnits": [
+      4,
+      5.3
+    ],
+    "quaternionXYZW": [
+      0.05236877277743948,
+      -0.10949472214130218,
+      -0.015056718859380822,
+      0.9924926763851578
+    ],
+    "translation": [
+      0.47586585248522234,
+      -1.5228883464026903,
+      3.54067895026653
+    ],
+    "fx": 1655.9418327515507,
+    "fy": 1662.9162293038396,
+    "cx": 540,
+    "cy": 960
+  },
+  "retainedCount": 197251,
+  "excludedCount": 7141987,
+  "retainedFraction": 0.026876223389948658,
+  "coreCount": 153269,
+  "marginCount": 43982,
+  "retainedZeroOpacity": 19422,
+  "centerBounds": {
+    "min": [
+      -1.0099151134490967,
+      0.8269102573394775,
+      0.4325038492679596
+    ],
+    "max": [
+      0.566084623336792,
+      1.5813679695129395,
+      1.918683409690857
+    ]
+  },
+  "maxSigma": [
+    0.2673991322517395,
+    0.3385336399078369,
+    0.2725825607776642
+  ],
+  "bytes": 6312032,
+  "sha256": "f3eec340ceae43a6bae8ad60294f5863b90fe78606c81f88ceb7c645df7b967c",
+  "selectedSourceIndexSha256": "25e77e913672370fb25539005606890e5cc3be3b3a4d045cdc8abed1c9855d58",
+  "bufferBytes": 4194304,
+  "observedPeakRssBytes": 73416704,
+  "processPeakRssKiB": 71728,
+  "changes": "Records copied byte-for-byte in original order; no random decimation, color/alpha edits, scale edits or quaternion edits. Global scene discarded outside crop. 30px image-space margin is finite, not a guarantee of every Gaussian tail or arbitrary novel views. Original supplied SPLAT has constant RGB (no SH); no PLY conversion was performed."
+}

@@ -1,0 +1,40 @@
+.worktrees/
+node_modules/
+dist/
+test-results/
+playwright-report/
+.local/
+
+# Machine state, credentials and local tooling
+.DS_Store
+.env
+.env.*
+!.env.example
+.aws/
+.ssh/
+.codex/
+.agents/
+.superpowers/
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+
+# Model weights and raw download caches; keep only small licensed runtime assets
+models/
+checkpoints/
+downloads/
+*.gguf
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+
+# Personal scene saves and captured/exported evidence
+exports/
+captures/
+*.wetland-plan.json
+*.wetland-assets.json
+*.zip

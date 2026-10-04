@@ -1,0 +1,153 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  color: #22312c;
+  background: #f4f5f2;
+  font-size: 13px;
+}
+* {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+body {
+  margin: 0;
+}
+#diagnostic {
+  height: 100vh;
+  min-height: 650px;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 28px 14px;
+  gap: 14px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+h1 {
+  font-size: 22px;
+  margin: 0;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #718378;
+  margin: 0 0 5px;
+}
+a {
+  color: #3f6651;
+}
+.controls {
+  display: flex;
+  gap: 18px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+label {
+  display: grid;
+  gap: 5px;
+  font-size: 11px;
+  color: #56655c;
+}
+button,
+select {
+  font: inherit;
+  color: #243c2e;
+  background: #fff;
+  border: 1px solid #cbd3cb;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+button {
+  cursor: pointer;
+}
+button:hover,
+button[aria-pressed="true"] {
+  background: #dce8dd;
+}
+.views {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+#stage {
+  position: relative;
+  flex: 1;
+  min-height: 300px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #30343b;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.caption {
+  position: absolute;
+  top: 16px;
+  left: 18px;
+  display: grid;
+  gap: 5px;
+  padding: 10px 14px;
+  color: #f3f5f1;
+  background: #1c242bc9;
+  border-radius: 5px;
+  pointer-events: none;
+}
+.caption b {
+  font-size: 13px;
+  font-weight: 500;
+}
+.caption span {
+  font-size: 10px;
+  color: #bac8c1;
+}
+.stage-credit {
+  position: absolute;
+  bottom: 14px;
+  left: 18px;
+  background: #1c242bc9;
+  color: #dce5df;
+  font-size: 10px;
+  padding: 7px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.readout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+}
+#counts {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+#diagnostic-status[data-state="error"] {
+  color: #a34032;
+}
+footer {
+  font-size: 10px;
+  color: #67766d;
+  line-height: 1.7;
+}
+footer p {
+  margin: 0;
+}
+@media (max-width: 700px) {
+  #diagnostic {
+    padding: 15px;
+  }
+  .views {
+    margin-left: 0;
+  }
+  .readout {
+    flex-wrap: wrap;
+  }
+  #counts {
+    margin-left: 0;
+  }
+}

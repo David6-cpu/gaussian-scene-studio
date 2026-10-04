@@ -1,0 +1,96 @@
+[
+  {
+    "id": "observed-flat",
+    "kind": "observed-failure",
+    "prompt": "湿地河岸，2组碎石、6丛低矮细草，水位-0.025；随机种子12345。地块4×4，平坦地形，采样间距0.1，地形层数1。",
+    "expected": {
+      "seed": 12345,
+      "width": 4,
+      "depth": 4,
+      "spacing": 0.1,
+      "amplitude": 0,
+      "octaves": 1,
+      "waterLevel": -0.025,
+      "requested": {
+        "rock": 2,
+        "reed": 6
+      }
+    },
+    "evidence": ".local/qwen3b-real-2026-10-03/first-natural-language-real-flow.json"
+  },
+  {
+    "id": "observed-layers",
+    "kind": "observed-failure",
+    "prompt": "种子6789的4米见方平地，三块石头、四株草，不放水。采样间距0.1，地形层数1。",
+    "expected": {
+      "seed": 6789,
+      "width": 4,
+      "depth": 4,
+      "spacing": 0.1,
+      "amplitude": 0,
+      "octaves": 1,
+      "waterLevel": null,
+      "requested": {
+        "rock": 3,
+        "reed": 4
+      }
+    },
+    "evidence": ".local/qwen3b-final-2026-10-03/real-flow.json"
+  },
+  {
+    "id": "explicit-control",
+    "kind": "known-positive",
+    "prompt": "湿地河岸，2组碎石、6丛低矮细草，水位-0.025；随机种子12345。地块4×4，地形振幅amplitude为0，采样间距0.1，地形层数1。",
+    "expected": {
+      "seed": 12345,
+      "width": 4,
+      "depth": 4,
+      "spacing": 0.1,
+      "amplitude": 0,
+      "octaves": 1,
+      "waterLevel": -0.025,
+      "requested": {
+        "rock": 2,
+        "reed": 6
+      }
+    }
+  },
+  {
+    "id": "flat-paraphrase",
+    "kind": "new-regression",
+    "prompt": "4米见方，没有起伏的湿地地面，噪声层数为二，三组石头、四丛草，水位0。",
+    "expected": {
+      "width": 4,
+      "depth": 4,
+      "amplitude": 0,
+      "octaves": 2,
+      "requested": {
+        "rock": 3,
+        "reed": 4
+      },
+      "waterLevel": 0
+    }
+  },
+  {
+    "id": "negated-flat",
+    "kind": "new-regression",
+    "prompt": "不要平地，起伏幅度0.3，地形层数为二，4米见方，两组石头、三丛草，水位0。",
+    "expected": {
+      "width": 4,
+      "depth": 4,
+      "amplitude": 0.3,
+      "octaves": 2,
+      "requested": {
+        "rock": 2,
+        "reed": 3
+      },
+      "waterLevel": 0
+    }
+  },
+  {
+    "id": "conflicting-layers",
+    "kind": "clarification",
+    "prompt": "4米见方的平地，地形层数1，同时地形层数3。",
+    "expectedAction": "clarify-without-inference"
+  }
+]

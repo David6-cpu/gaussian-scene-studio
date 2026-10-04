@@ -1,0 +1,502 @@
+{
+  "sourceCommit": "b33f2f3",
+  "notes": "Captured before changing product code; JSON typed arrays become numeric arrays; stage timings excluded",
+  "cases": [
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-v1",
+        "recipeSource": "manual",
+        "seed": 42,
+        "width": 10,
+        "depth": 10,
+        "spacing": 0.2,
+        "amplitude": 0.6,
+        "octaves": 3,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": 0,
+        "requested": {
+          "rock": 10,
+          "reed": 10
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "cf6460d6cae1934c8dfcd9f55b2327191fc95672ebc86e78f455e570af2ebf58",
+      "heightfieldSHA256": "6d65bf4eab71dae9e1b8973eb2295e39e0c568ad99500b0c7ff7a875aeb6b57c",
+      "counts": {
+        "uniqueSourceSplats": 13292,
+        "activeSplats": 84972
+      },
+      "accepted": {
+        "rock": 10,
+        "reed": 10
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "spacing": 94,
+        "boundary": 23,
+        "water": 11
+      }
+    },
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-v1",
+        "recipeSource": "manual",
+        "seed": 20261002,
+        "width": 10,
+        "depth": 10,
+        "spacing": 0.2,
+        "amplitude": 0.6,
+        "octaves": 3,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": 0,
+        "requested": {
+          "rock": 10,
+          "reed": 10
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "896674148ed34e06d6dd75a3bfaaef8d2900c4ee7aee1aa8ee2b904d5a805786",
+      "heightfieldSHA256": "62220ccd24fb1c5657174f9caa68a31d8c8110bb5c02f4a102f384ce8031bcc1",
+      "counts": {
+        "uniqueSourceSplats": 13443,
+        "activeSplats": 85123
+      },
+      "accepted": {
+        "rock": 10,
+        "reed": 10
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "water": 28,
+        "boundary": 67,
+        "spacing": 213
+      }
+    },
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-shore-v2",
+        "recipeSource": "manual",
+        "seed": 42,
+        "width": 10,
+        "depth": 10,
+        "spacing": 0.2,
+        "amplitude": 0.6,
+        "octaves": 3,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": 0,
+        "requested": {
+          "rock": 10,
+          "reed": 10
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "354857556ada2156b2939a91e25fa80c3b01cbb5a175b1bb990d77955aabecab",
+      "heightfieldSHA256": "6d65bf4eab71dae9e1b8973eb2295e39e0c568ad99500b0c7ff7a875aeb6b57c",
+      "counts": {
+        "uniqueSourceSplats": 21662,
+        "activeSplats": 93342
+      },
+      "accepted": {
+        "rock": 10,
+        "reed": 10
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "spacing": 94,
+        "boundary": 23,
+        "water": 11
+      }
+    },
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-shore-v2",
+        "recipeSource": "manual",
+        "seed": 20261002,
+        "width": 10,
+        "depth": 10,
+        "spacing": 0.2,
+        "amplitude": 0.6,
+        "octaves": 3,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": 0,
+        "requested": {
+          "rock": 10,
+          "reed": 10
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "6d2182474f77c1adcc811c716ddca1fc69621af53bd40e474c67c751c22a12f8",
+      "heightfieldSHA256": "62220ccd24fb1c5657174f9caa68a31d8c8110bb5c02f4a102f384ce8031bcc1",
+      "counts": {
+        "uniqueSourceSplats": 23639,
+        "activeSplats": 95319
+      },
+      "accepted": {
+        "rock": 10,
+        "reed": 10
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "water": 28,
+        "boundary": 67,
+        "spacing": 213
+      }
+    },
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-riverside-v1",
+        "recipeSource": "manual",
+        "seed": 42,
+        "width": 4,
+        "depth": 4,
+        "spacing": 0.1,
+        "amplitude": 0,
+        "octaves": 1,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": -0.025,
+        "requested": {
+          "rock": 2,
+          "reed": 6
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "97baf7114b2d2181d06c47e70a4dcef310030bf17b0854cfc6a6d072bd981232",
+      "heightfieldSHA256": "b62e075ff492110db15d6660e5df6dfa7eea3dc5751059ce210d4b2b7092cc24",
+      "counts": {
+        "uniqueSourceSplats": 76167,
+        "activeSplats": 98695
+      },
+      "accepted": {
+        "rock": 2,
+        "reed": 6
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "water": 12,
+        "boundary": 17,
+        "spacing": 19
+      }
+    },
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-riverside-v1",
+        "recipeSource": "manual",
+        "seed": 20261002,
+        "width": 4,
+        "depth": 4,
+        "spacing": 0.1,
+        "amplitude": 0,
+        "octaves": 1,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": -0.025,
+        "requested": {
+          "rock": 2,
+          "reed": 6
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "18eb865f363da4f6a318bc8068042de583446df90cfac7e15f29340f1b895b44",
+      "heightfieldSHA256": "b62e075ff492110db15d6660e5df6dfa7eea3dc5751059ce210d4b2b7092cc24",
+      "counts": {
+        "uniqueSourceSplats": 76167,
+        "activeSplats": 98695
+      },
+      "accepted": {
+        "rock": 2,
+        "reed": 6
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "water": 13,
+        "slope": 2,
+        "boundary": 26,
+        "spacing": 35
+      }
+    },
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-riverside-grass-v1",
+        "recipeSource": "manual",
+        "seed": 42,
+        "width": 4,
+        "depth": 4,
+        "spacing": 0.1,
+        "amplitude": 0,
+        "octaves": 1,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": -0.025,
+        "requested": {
+          "rock": 2,
+          "reed": 6
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "43ab4c460889bc236f2e63b5b330d3c5d36ff56367c8757a8acac2fce59ee320",
+      "heightfieldSHA256": "b62e075ff492110db15d6660e5df6dfa7eea3dc5751059ce210d4b2b7092cc24",
+      "counts": {
+        "uniqueSourceSplats": 76167,
+        "activeSplats": 98695
+      },
+      "accepted": {
+        "rock": 2,
+        "reed": 6
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "water": 28,
+        "boundary": 74,
+        "spacing": 53
+      }
+    },
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-riverside-grass-v1",
+        "recipeSource": "manual",
+        "seed": 20261002,
+        "width": 4,
+        "depth": 4,
+        "spacing": 0.1,
+        "amplitude": 0,
+        "octaves": 1,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": -0.025,
+        "requested": {
+          "rock": 2,
+          "reed": 6
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "309316e369bfa2f346cd645eef5238056f203b597d24eacd1a278758401fec09",
+      "heightfieldSHA256": "b62e075ff492110db15d6660e5df6dfa7eea3dc5751059ce210d4b2b7092cc24",
+      "counts": {
+        "uniqueSourceSplats": 76167,
+        "activeSplats": 98695
+      },
+      "accepted": {
+        "rock": 2,
+        "reed": 6
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "boundary": 45,
+        "water": 42,
+        "spacing": 32
+      }
+    },
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-riverside-grass-v2",
+        "recipeSource": "manual",
+        "seed": 42,
+        "width": 4,
+        "depth": 4,
+        "spacing": 0.1,
+        "amplitude": 0,
+        "octaves": 1,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": -0.025,
+        "requested": {
+          "rock": 2,
+          "reed": 6
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "2908e9f9630c3be45f02197fbc3c6c16d79b5b6ef7b71f49c05a062f3ff5f126",
+      "heightfieldSHA256": "b62e075ff492110db15d6660e5df6dfa7eea3dc5751059ce210d4b2b7092cc24",
+      "counts": {
+        "uniqueSourceSplats": 76167,
+        "activeSplats": 98695
+      },
+      "accepted": {
+        "rock": 2,
+        "reed": 6
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "water": 28,
+        "boundary": 74,
+        "spacing": 53
+      }
+    },
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-riverside-grass-v2",
+        "recipeSource": "manual",
+        "seed": 20261002,
+        "width": 4,
+        "depth": 4,
+        "spacing": 0.1,
+        "amplitude": 0,
+        "octaves": 1,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": -0.025,
+        "requested": {
+          "rock": 2,
+          "reed": 6
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "76a398ce500b54bc3c1d4e293f887ac0d23097499dd57e7c97699c0fc06612b2",
+      "heightfieldSHA256": "b62e075ff492110db15d6660e5df6dfa7eea3dc5751059ce210d4b2b7092cc24",
+      "counts": {
+        "uniqueSourceSplats": 76167,
+        "activeSplats": 98695
+      },
+      "accepted": {
+        "rock": 2,
+        "reed": 6
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "boundary": 45,
+        "water": 42,
+        "spacing": 32
+      }
+    },
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-riverside-reed-v1",
+        "recipeSource": "manual",
+        "seed": 42,
+        "width": 4,
+        "depth": 4,
+        "spacing": 0.1,
+        "amplitude": 0,
+        "octaves": 1,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": -0.025,
+        "requested": {
+          "rock": 2,
+          "reed": 6
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "5a9a72c919cbea94a2135fae0b6d9353d0cf4c0f86e3e03a15251cec5452d1d1",
+      "heightfieldSHA256": "b62e075ff492110db15d6660e5df6dfa7eea3dc5751059ce210d4b2b7092cc24",
+      "counts": {
+        "uniqueSourceSplats": 76167,
+        "activeSplats": 98695
+      },
+      "accepted": {
+        "rock": 2,
+        "reed": 6
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "water": 18,
+        "boundary": 36,
+        "spacing": 28,
+        "shore-distance": 6
+      }
+    },
+    {
+      "recipe": {
+        "schemaVersion": 1,
+        "algorithmVersion": "f0-riverside-reed-v1",
+        "recipeSource": "manual",
+        "seed": 20261002,
+        "width": 4,
+        "depth": 4,
+        "spacing": 0.1,
+        "amplitude": 0,
+        "octaves": 1,
+        "tangentFactor": 0.75,
+        "normalFactor": 0.1,
+        "opacity": 0.95,
+        "waterLevel": -0.025,
+        "requested": {
+          "rock": 2,
+          "reed": 6
+        },
+        "lodEnabled": true
+      },
+      "sceneSHA256": "292aeab4d3b5968567a8b5dfc4309074a249a76fcbdcf073fc776624b87b8249",
+      "heightfieldSHA256": "b62e075ff492110db15d6660e5df6dfa7eea3dc5751059ce210d4b2b7092cc24",
+      "counts": {
+        "uniqueSourceSplats": 76167,
+        "activeSplats": 98695
+      },
+      "accepted": {
+        "rock": 2,
+        "reed": 6
+      },
+      "shortfall": {
+        "rock": 0,
+        "reed": 0
+      },
+      "rejections": {
+        "boundary": 63,
+        "water": 59,
+        "shore-distance": 14,
+        "spacing": 62,
+        "slope": 2
+      }
+    }
+  ]
+}
