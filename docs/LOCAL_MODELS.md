@@ -45,3 +45,9 @@ npm run dev
 旧规划入口保留 Ollama / 7B 配置。模型存在检查只核对服务声明，不能单靠名称验证权重，也不代表完成真实推理验收。后端不可用时“默认回退”使用固定配方，仍需人工确认；不能将它算作输入语义成功。
 
 The tested local AI path uses the 3B GGUF model and llama.cpp. Weights are not included. The current interface and evaluation prompts are primarily Chinese. The `.command` launchers require an existing, machine-specific runtime; they do not provide a portable installer.
+
+## 显式启用受控地表目录
+
+模型的启动参数、来源与资源检查保持原样。在启动 Vite 的同一终端配置 `WETLAND_LOCAL_CATALOG=.local/<新目录>/index.json`，例如 `WETLAND_LOCAL_CATALOG=.local/new-ground-library/index.json npm run dev`。preview 也必须设置同一变量；静态文件本身不提供目录服务。
+
+页面读取服务的目录指纹，选材请求携带该指纹；模型只能从该目录的候选 ID 中选择。目录已改变或资产未安装时明确拒绝，不回退成旧 Riverside。[离线准备与人工登记](SH_IMPORT.md) · [真实3B流程验证](validation/controlled-ground-admission-results.md)。

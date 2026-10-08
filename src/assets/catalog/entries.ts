@@ -1,5 +1,5 @@
-import { riversideData } from "../../terrain/riverside-data";
-import { parseCatalog, type AssetMetadata, type Category } from "./metadata";
+import { riversideData } from "../../terrain/riverside-data.ts";
+import { parseCatalog, type AssetMetadata, type Category } from "./metadata.ts";
 
 export const ASSET_CATALOG_VERSION = "asset-catalog-v1";
 function procedural(

@@ -1,8 +1,29 @@
 import "./style.css";
+import { mountEnvironmentPanel } from "./environment/panel";
 import { mountPlanner } from "./planner/panel";
 import { mountAssetSelection } from "./selection/panel";
+import { mountSceneReview } from "./review/panel";
+import {
+  createPreviewController,
+  type PreviewController,
+  type StagedPreview,
+} from "./review/preview-controller";
+import {
+  createReviewRecord,
+  appendReviewRecord,
+  historyKey,
+  type ResolvedReview,
+  type SceneReviewRecord,
+} from "./review/versions";
 import { createGaussianView } from "./gaussian/view";
-import type { BuildResult, F0Recipe, GaussianView } from "./gaussian/types";
+import type {
+  BuildResult,
+  F0Recipe,
+  GaussianView,
+  SceneBuildResult,
+  SceneRecipe,
+  RiverbankRecipe,
+} from "./gaussian/types";
 import {
   defaultRecipe,
   riversideRecipe,
@@ -10,16 +31,32 @@ import {
   isRiverside,
   isRiverProps,
   sceneAssetLabel,
+  isRiverbank,
 } from "./recipe";
 import { makeCameraGuard, applyCameraPreset } from "./camera";
-import { encodeBundle, decodeBundle } from "./io/bundle";
+import {
+  encodeSceneBundle,
+  decodeSceneBundle,
+} from "./io/prepared-scene-bundle";
+import {
+  parseCatalogContext,
+  resolvePreparedDefinition,
+  type CatalogContext,
+} from "./assets/catalog/context";
+import { readPreparedGround } from "./io/prepared-ground";
+import { downloadBlob } from "./io/download";
 import { packBundle, unpackBundle } from "./io/archive";
 import { measureRoute } from "./benchmark";
 
+const query = new URLSearchParams(location.search);
+const reviewEnabled = query.get("review") === "1";
 const app = document.querySelector<HTMLElement>("#app")!;
 app.innerHTML = `
 <header class="topbar"><div class="brand"><span class="brand-mark">W</span><div><p class="eyebrow">WETLAND / FIELD LAB</p><h1>湿地生成实验室</h1></div></div><div class="phase"><span class="dot"></span> F0 · 统一高斯验证</div></header>
 <div class="workspace"><aside class="sidebar"><div class="intro"><p class="eyebrow">01 / 构建场景</p><h2>一块可以探索的湿地</h2><p>调整地形与资产，观察高斯场景的形态、覆盖和细节。</p></div>
+<section id="scene-review"${reviewEnabled ? "" : " hidden"} aria-label="场景审阅与预览"></section>
+<section id="environment-panel" aria-label="导入环境与本机记录"></section>
+<details id="advanced-compat"${!reviewEnabled || query.has("advanced") || query.get("surface") === "baseline" ? " open" : ""}><summary>高级与旧版本兼容</summary>
 <div class="mode-note">Riverside 地表 · 程序低矮细叶草丛与碎石候选（非实拍）</div>
 <section id="asset-planner" aria-label="湿地两阶段选材"></section>
 <section id="planner" aria-label="场景规划与版本"></section>
@@ -41,7 +78,7 @@ app.innerHTML = `
 <div class="actions"><button class="primary" id="generate">生成场景 <span aria-hidden="true">↗</span></button><button id="cancel" disabled>取消</button></div>
 <div id="status" role="status" data-state="loading">正在准备渲染器…</div><p id="dirty" class="muted"></p>
 <div class="file-actions"><button id="save" disabled>保存场景包</button><button id="import">打开场景包</button><button id="clear">清空场景</button><input id="bundle-file" type="file" accept=".zip" hidden></div>
-<p class="footnote">场景保存在本机。石头与植株为程序生成的测试代理；水面为静态近似表现。<a href="/diagnostic.html">打开真实资产清晰度对照 ↗</a></p></aside>
+<p class="footnote">场景保存在本机。石头与植株为程序生成的测试代理；水面为静态近似表现。<a href="/diagnostic.html">打开真实资产清晰度对照 ↗</a></p></details></aside>
 <section class="viewer"><div class="viewer-top"><div><p class="eyebrow">02 / 探索与观察</p><span id="scene-title">10 × 10 m · 湿地样方</span></div><label class="contrast"><input id="contrast" type="checkbox"> 高对比背景</label></div>
 <div class="canvas-wrap"><canvas aria-label="湿地高斯场景"></canvas><div class="canvas-label"><span class="dot"></span><span>GAUSSIAN SCENE</span></div><div class="scene-stats"><div><b id="instance-count">—</b><small>实际实例</small></div><div><b id="active-count">—</b><small>活跃高斯</small></div><div><b id="source-count">—</b><small>共享源高斯</small></div></div><div class="camera-bar"><button data-camera="overlap" class="selected">总览</button><button data-camera="top">俯视</button><button data-camera="eye">眼高</button><button data-camera="low">低角度</button><button data-camera="near">近景</button></div></div>
 <div class="viewer-bottom"><span>拖动旋转 · 右键平移 · 滚轮缩放</span><span id="build-time">等待构建</span></div>
@@ -53,13 +90,39 @@ const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
 const input = (id: string) => $<HTMLInputElement>(id),
   number = (id: string) =>
     input(id).value === "" ? NaN : Number(input(id).value);
+for (const [value, title] of [
+  ["f0-riverbank-grass-v1", "河岸预览 · 低矮草丛"],
+  ["f0-riverbank-reed-v1", "河岸预览 · 芦苇"],
+]) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = title;
+  $("algorithmVersion").append(option);
+}
+if (reviewEnabled) {
+  document.body.classList.add("review-mode");
+  document.querySelector(".phase")!.textContent = "本机预览 · 使用后保存";
+  document.querySelector(".intro > p:last-child")!.textContent =
+    "写下想法，核对摘要，先试看再决定是否使用。";
+  document.querySelector(".canvas-label")!.textContent = "河岸场景";
+  for (const selector of [
+    ".scene-stats",
+    ".measurement-panel",
+    "#measurement-data",
+    "#build-time",
+  ]) {
+    const element = document.querySelector(selector);
+    if (element) $("advanced-compat").append(element);
+  }
+}
+const legacyCredit = $("ground-credit").innerHTML;
 const canvas = document.querySelector("canvas")!,
   wrap = document.querySelector(".canvas-wrap")!,
   status = $("status");
 let view: GaussianView,
   worker: Worker | null = null,
   requestId = 0,
-  result: BuildResult | null = null,
+  result: SceneBuildResult | null = null,
   lost = false,
   renderFailed = false,
   raf = 0,
@@ -69,7 +132,58 @@ let view: GaussianView,
   renderDpr = 1;
 let planner: ReturnType<typeof mountPlanner> | undefined;
 let assetPlanner: ReturnType<typeof mountAssetSelection> | undefined;
+let sceneReview: ReturnType<typeof mountSceneReview> | undefined;
+let environmentPanel: ReturnType<typeof mountEnvironmentPanel> | undefined;
+let reviewController: PreviewController<ResolvedReview, SceneReviewRecord> | undefined;
+let previewResult: BuildResult | null = null;
 let initialLoadRecipe: F0Recipe | null = null;
+let catalogContext: CatalogContext;
+async function readLocalBytes(
+  url: string,
+  limit: number,
+  signal?: AbortSignal,
+) {
+  const response = await fetch(url, { signal, redirect: "error" });
+  if (!response.ok) throw Error(`本机素材接口 HTTP ${response.status}`);
+  const declared = response.headers.get("content-length");
+  if (declared !== null && Number(declared) > limit) throw Error("响应超限");
+  if (!response.body) throw Error("响应正文缺失");
+  const reader = response.body.getReader(),
+    chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      size += value.length;
+      if (size > limit) throw Error("响应超限");
+      chunks.push(value);
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+    reader.releaseLock();
+  }
+  const out = new Uint8Array(size);
+  let at = 0;
+  for (const c of chunks) {
+    out.set(c, at);
+    at += c.length;
+  }
+  return out;
+}
+const createView = () =>
+  createGaussianView(canvas, {
+    loadPreparedGround: async (ref, signal) => {
+      resolvePreparedDefinition(catalogContext, ref);
+      return readPreparedGround(
+        await readLocalBytes(
+          `/api/planner/assets/package/${ref.id}/${ref.contentVersion}`,
+          64 * 1024 ** 2,
+          signal,
+        ),
+      );
+    },
+  });
 export const workbench = {
   get view() {
     return view;
@@ -88,11 +202,24 @@ function state(kind: string, message: string) {
   status.dataset.state = kind;
   status.textContent = message;
   input("cancel").disabled = kind !== "building";
-  input("measure").disabled = kind !== "ready" || measuring;
+  input("measure").disabled =
+    kind !== "ready" ||
+    measuring ||
+    result?.recipe.schemaVersion === 2 ||
+    isRiverbank(result?.recipe.algorithmVersion);
+  input("save").disabled =
+    kind === "building" ||
+    !result ||
+    Boolean(reviewController && reviewController.getState().phase !== "idle");
+  input("contrast").disabled = kind === "building";
+  for (const b of document.querySelectorAll<HTMLButtonElement>("[data-camera]"))
+    b.disabled = kind === "building";
+  view?.setInteractive(kind !== "building");
 }
 function publishSceneEvidence() {
   $("scene-evidence").textContent = JSON.stringify({
     recipe: result?.recipe ?? null,
+    ...(previewResult ? { previewRecipe: previewResult.recipe } : {}),
     buildReport: result?.report ?? null,
     stats: view.stats(),
     gpu: view.gpuInfo(),
@@ -111,6 +238,7 @@ function renderFrame(): boolean {
     return true;
   } catch (e) {
     renderFailed = true;
+    sceneReview?.invalidate("渲染中断，预览已取消；上一版数据保留。");
     planner?.sceneFailed(requestId, String(e), true);
     assetPlanner?.sceneFailed(requestId, String(e), true);
     worker?.terminate();
@@ -185,6 +313,7 @@ function populate(recipe: F0Recipe) {
   $("surface-note").hidden = !scanned;
 }
 function cancel() {
+  sceneReview?.invalidate("已取消，上一版场景保留。");
   planner?.invalidate("构建与待审规划已取消。");
   assetPlanner?.invalidate("构建与待审规划已取消。");
   requestId++;
@@ -193,39 +322,61 @@ function cancel() {
   worker = null;
   state("cancelled", result ? "已取消，保留上一版场景。" : "已取消。");
 }
-async function adopt(next: BuildResult, id: number, imported = false) {
-  if (id !== requestId || lost) return;
+async function ensureRenderer(id: number): Promise<boolean> {
+  if (id !== requestId || lost) return false;
   if (renderFailed) {
     view.dispose();
-    const recovered = await createGaussianView(canvas);
+    const recovered = await createView();
     if (id !== requestId || lost) {
       recovered.dispose();
-      return;
+      return false;
     }
     view = recovered;
     view.setInteractive(true);
     view.setBackground(input("contrast").checked ? 0xd91b78 : 0xe9ecdf);
     renderFailed = false;
+    if (result) await recovered.setScene(result.scene);
+    // Superseded setScene calls resolve after disposing their temporary data.
+    // A newer request may already own this renderer and its pending swap.
+    if (id !== requestId || lost || view !== recovered) return false;
     resize();
   }
-  await view.setScene(next.scene);
-  if (id !== requestId || lost) return;
-  result = next;
-  view.setLodEnabled(next.recipe.lodEnabled);
-  view.setCameraGuard(
-    makeCameraGuard(next.heightfield, next.scene, next.recipe.waterLevel),
-  );
-  applyCameraPreset(
-    view,
-    next.heightfield,
-    "overlap",
-    next.recipe.waterLevel,
-    next.scene.ground ? 6 : undefined,
-  );
-  if (!(await waitForDisplayed(id))) return;
+  return true;
+}
+async function adopt(next: SceneBuildResult, id: number, imported = false) {
+  if (!(await ensureRenderer(id)) || id !== requestId || lost) return;
+  const swap = await view.prepareScene(next.scene);
+  if (id !== requestId || lost) {
+    swap.rollback();
+    return;
+  }
+  try {
+    swap.activate();
+    view.setLodEnabled(next.recipe.lodEnabled);
+    view.setCameraGuard(
+      makeCameraGuard(next.heightfield, next.scene, next.recipe.waterLevel),
+    );
+    applyCameraPreset(
+      view,
+      next.heightfield,
+      "overlap",
+      next.recipe.waterLevel,
+      next.scene.ground ? 6 : undefined,
+    );
+    if (!(await waitForDisplayed(id)))
+      throw new DOMException("Scene display cancelled", "AbortError");
+    swap.commit();
+    result = next;
+  } catch (e) {
+    swap.rollback();
+    throw e;
+  }
+  finishAdopt(next, id, imported);
+}
+function finishAdopt(next: SceneBuildResult, id: number, imported = false) {
   if (!firstReadyMs) {
     firstReadyMs = performance.now();
-    initialLoadRecipe = next.recipe;
+    if (next.recipe.schemaVersion === 1) initialLoadRecipe = next.recipe;
   }
   status.dataset.firstReadyMs = String(firstReadyMs);
   status.dataset.seed = String(next.recipe.seed);
@@ -246,21 +397,184 @@ async function adopt(next: BuildResult, id: number, imported = false) {
     ? ""
     : "参数已修改；点击生成后应用。保存的是当前已显示场景。";
   input("save").disabled = false;
-  $("scene-title").textContent = next.scene.ground
-    ? "Riverside · 4 × 4 展示范围 · 试用"
-    : `${next.recipe.width} × ${next.recipe.depth} m · 湿地样方`;
+  $("scene-title").textContent =
+    next.scene.ground && "kind" in next.scene.ground
+      ? `${next.scene.ground.definition.metadata.title} · 4 × 4 展示范围`
+      : next.scene.ground
+        ? "Riverside · 4 × 4 展示范围 · 试用"
+        : `${next.recipe.width} × ${next.recipe.depth} m · 湿地样方`;
   $("ground-credit").hidden = !next.scene.ground;
+  if (next.scene.ground && "kind" in next.scene.ground) {
+    const d = next.scene.ground.definition,
+      a = document.createElement("a");
+    a.href = d.metadata.provenance.source;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = `${d.metadata.title} © ${d.metadata.provenance.author}`;
+    $("ground-credit").replaceChildren(
+      a,
+      document.createTextNode(
+        ` · ${d.metadata.provenance.license} · ${d.mode} · ${d.purpose === "workflow-test" ? "接入流程验证副本，新增合格素材0" : "人工试用候选"} · 许可随自包含场景包保存`,
+      ),
+    );
+    $("measurement-summary").textContent =
+      "受控地表路径尚未做旧F0同等性能基准，不给出性能合格判定。";
+  } else $("ground-credit").innerHTML = legacyCredit;
   document.querySelector(".mode-note")!.textContent = next.scene.ground
-    ? `${sceneAssetLabel(next.recipe.algorithmVersion)} · 配方来源见规划记录`
+    ? next.recipe.schemaVersion === 2
+      ? `${next.scene.ground.id} · 已核对内容版本 · 程序道具`
+      : `${sceneAssetLabel(next.recipe.algorithmVersion)} · 配方来源见规划记录`
     : "手工配方 · 合成高斯资产 · 未接入 LLM";
   $("build-time").textContent =
     `${imported ? "保存的构建记录" : "PCG 构建"} ${next.report.stageMs.total.toFixed(1)} ms`;
   publishSceneEvidence();
   document.dispatchEvent(new CustomEvent("scene-ready"));
-  planner?.sceneReady(id, next.recipe);
+  if (next.recipe.schemaVersion === 1) planner?.sceneReady(id, next.recipe);
+  else planner?.invalidate("当前显示受控地表，原规划关联已清除。", true);
   assetPlanner?.sceneReady(id, next.recipe);
 }
-function generate(recipe?: F0Recipe) {
+function cancelReview() {
+  const pending = reviewController?.getState().phase !== "idle";
+  reviewController?.cancel();
+  if (pending && !lost && !renderFailed) {
+    state(result ? "ready" : "empty", "预览已取消，上一版场景保留。");
+  }
+}
+function buildReview(
+  recipe: RiverbankRecipe,
+  signal: AbortSignal,
+): Promise<BuildResult> {
+  signal.throwIfAborted();
+  if (lost) return Promise.reject(Error("图形上下文正在恢复，请稍后重试。"));
+  worker?.terminate();
+  worker = null;
+  const id = ++requestId;
+  view.cancelPendingScene();
+  planner?.invalidate("新的预览已开始，待审规划失效。");
+  assetPlanner?.invalidate("新的预览已开始，待审选材失效。");
+  state("building", "正在构建临时预览，上一版数据保留…");
+  document.dispatchEvent(new CustomEvent("scene-changing"));
+  return new Promise((resolve, reject) => {
+    const current = new Worker(new URL("./build.worker.ts", import.meta.url), {
+      type: "module",
+    });
+    worker = current;
+    const clean = () => {
+      current.terminate();
+      if (worker === current) worker = null;
+      signal.removeEventListener("abort", abort);
+    };
+    const abort = () => {
+      clean();
+      if (id === requestId) requestId++;
+      reject(new DOMException("Preview cancelled", "AbortError"));
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    current.onmessage = ({ data }) => {
+      clean();
+      if (id !== requestId || signal.aborted) {
+        reject(new DOMException("Preview superseded", "AbortError"));
+        return;
+      }
+      if (!data.ok) {
+        state("error", "预览构建失败，上一版场景保留。");
+        reject(Error(String(data.error)));
+        return;
+      }
+      resolve(data.result);
+    };
+    current.onerror = (e) => {
+      clean();
+      if (id === requestId) state("error", "预览构建失败，上一版场景保留。");
+      reject(Error(e.message));
+    };
+    current.postMessage({ requestId: id, recipe });
+  });
+}
+async function stageReview(
+  next: BuildResult,
+  signal: AbortSignal,
+): Promise<StagedPreview> {
+  signal.throwIfAborted();
+  const id = requestId;
+  if (!(await ensureRenderer(id)) || id !== requestId || signal.aborted || lost)
+    throw new DOMException("Preview superseded", "AbortError");
+  const owner = view,
+    previousTitle = $("scene-title").textContent;
+  const selectedCamera = document.querySelector<HTMLButtonElement>(
+    "[data-camera].selected",
+  )?.dataset.camera;
+  let swap: Awaited<ReturnType<GaussianView["prepareScene"]>> | undefined,
+    closed = false;
+  const current = () =>
+    id === requestId &&
+    view === owner &&
+    !lost &&
+    !renderFailed &&
+    !signal.aborted;
+  const rollback = () => {
+    if (closed) return;
+    closed = true;
+    signal.removeEventListener("abort", rollback);
+    swap?.rollback();
+    if (previewResult === next) previewResult = null;
+    if (id === requestId && view === owner) {
+      if (!swap) owner.cancelPendingScene();
+      $("scene-title").textContent = previousTitle;
+      for (const b of document.querySelectorAll<HTMLButtonElement>(
+        "[data-camera]",
+      ))
+        b.classList.toggle("selected", b.dataset.camera === selectedCamera);
+      if (!lost && !renderFailed)
+        state(result ? "ready" : "empty", "预览已取消，上一版场景保留。");
+    }
+  };
+  signal.addEventListener("abort", rollback, { once: true });
+  try {
+    swap = await owner.prepareScene(next.scene);
+    if (!current() || closed) {
+      swap.rollback();
+      throw new DOMException("Preview cancelled", "AbortError");
+    }
+    swap.activate();
+    previewResult = next;
+    owner.setLodEnabled(next.recipe.lodEnabled);
+    owner.setCameraGuard(
+      makeCameraGuard(next.heightfield, next.scene, next.recipe.waterLevel),
+    );
+    applyCameraPreset(
+      owner,
+      next.heightfield,
+      "overlap",
+      next.recipe.waterLevel,
+      6,
+    );
+    for (const b of document.querySelectorAll<HTMLButtonElement>(
+      "[data-camera]",
+    ))
+      b.classList.toggle("selected", b.dataset.camera === "overlap");
+    if (!(await waitForDisplayed(id)) || !current())
+      throw new DOMException("Preview not displayed", "AbortError");
+    state("preview", "预览，尚未使用；旧场景仍是保存目标。");
+    $("scene-title").textContent = "河岸预览 · 尚未使用";
+    return {
+      isUsable: () => !closed && current() && owner.isCurrentSceneDisplayed(),
+      rollback,
+      commit() {
+        if (closed || !current() || !owner.isCurrentSceneDisplayed())
+          throw new DOMException("Preview expired", "AbortError");
+        swap!.commit();
+        closed = true;
+        signal.removeEventListener("abort", rollback);
+      },
+    };
+  } catch (e) {
+    rollback();
+    throw e;
+  }
+}
+function generate(recipe?: SceneRecipe) {
+  sceneReview?.invalidate("高级操作已开始，待审预览取消。");
   if (lost) {
     state("context-lost", "图形上下文丢失，等待恢复…");
     return;
@@ -291,8 +605,8 @@ function generate(recipe?: F0Recipe) {
         await adopt(data.result, id);
       } catch (e) {
         if (id === requestId) {
-          planner?.sceneFailed(id, String(e), true);
-          assetPlanner?.sceneFailed(id, String(e), true);
+          planner?.sceneFailed(id, String(e));
+          assetPlanner?.sceneFailed(id, String(e));
           state("error", `渲染失败：${String(e)}`);
         }
       }
@@ -306,7 +620,18 @@ function generate(recipe?: F0Recipe) {
         state("error", `构建失败：${e.message}`);
       }
     };
-    current.postMessage({ requestId: id, recipe: selected });
+    current.postMessage({
+      requestId: id,
+      recipe: selected,
+      ...(selected.schemaVersion === 2
+        ? {
+            definition: resolvePreparedDefinition(
+              catalogContext,
+              selected.ground,
+            ),
+          }
+        : {}),
+    });
     return id;
   } catch (e) {
     state("error", `${String(e)}。请修改后重试；画布保留上一版。`);
@@ -324,13 +649,17 @@ function resize() {
 function tick(time: number) {
   // Moving between displays or changing zoom can change DPR without changing layout.
   if (view && desiredRenderDpr() !== renderDpr) resize();
-  if (!lost && !renderFailed) renderFrame();
+  if (!lost && !renderFailed && !environmentPanel?.active) renderFrame();
   if (view && time - lastStats > 250) {
     const s = view.stats();
     $("instance-count").textContent = String(s.instanceCount);
     $("active-count").textContent = s.activeSplats.toLocaleString();
     $("source-count").textContent = s.uniqueSourceSplats.toLocaleString();
     publishSceneEvidence();
+    input("save").disabled =
+      status.dataset.state === "building" ||
+      !result ||
+      Boolean(reviewController && reviewController.getState().phase !== "idle");
     lastStats = time;
   }
   raf = requestAnimationFrame(tick);
@@ -360,7 +689,15 @@ $("clear").onclick = async () => {
   }
 };
 $("measure").onclick = async () => {
-  if (!result || lost || measuring || status.dataset.state !== "ready") return;
+  if (
+    !result ||
+    result.recipe.schemaVersion !== 1 ||
+    isRiverbank(result.recipe.algorithmVersion) ||
+    lost ||
+    measuring ||
+    status.dataset.state !== "ready"
+  )
+    return;
   measuring = true;
   input("measure").disabled = true;
   input("save-measurement").disabled = true;
@@ -374,7 +711,7 @@ $("measure").onclick = async () => {
     const pending = measureRoute(
       view,
       canvas,
-      result,
+      result as BuildResult,
       firstReadyMs,
       initialLoadRecipe!,
     );
@@ -397,30 +734,32 @@ $("measure").onclick = async () => {
   }
 };
 $("save-measurement").onclick = () => {
-  const url = URL.createObjectURL(
+  try {
+    downloadBlob(
       new Blob([$("measurement-data").textContent ?? ""], {
         type: "application/json",
       }),
-    ),
-    a = document.createElement("a");
-  a.href = url;
-  a.download = `wetland-f0-measurement-${Date.now()}.json`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+      `wetland-f0-measurement-${Date.now()}.json`,
+    );
+  } catch (e) {
+    state("error", `下载失败：${e}`);
+  }
 };
 $("import").onclick = () => input("bundle-file").click();
 $("save").onclick = async () => {
-  if (!result) return;
+  if (
+    !result ||
+    status.dataset.state === "building" ||
+    (reviewController && reviewController.getState().phase !== "idle")
+  )
+    return;
   try {
-    const bytes = packBundle(await encodeBundle(result)),
-      url = URL.createObjectURL(
-        new Blob([new Uint8Array(bytes).buffer], { type: "application/zip" }),
-      ),
-      a = document.createElement("a");
-    a.href = url;
-    a.download = `wetland-f0-${result.recipe.seed}.zip`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    const saved = result;
+    const bytes = packBundle(await encodeSceneBundle(saved));
+    downloadBlob(
+      new Blob([new Uint8Array(bytes).buffer], { type: "application/zip" }),
+      `wetland-f0-${saved.recipe.seed}.zip`,
+    );
   } catch (e) {
     state("error", `保存失败：${String(e)}`);
   }
@@ -428,8 +767,9 @@ $("save").onclick = async () => {
 input("bundle-file").onchange = async () => {
   const file = input("bundle-file").files?.[0];
   if (!file) return;
+  sceneReview?.invalidate("正在打开旧场景包，待审预览已取消。");
   planner?.invalidate("场景包不含规划证据，关联已清除。", true);
-  assetPlanner?.invalidate("场景包不含规划证据，关联已清除。", true);
+  assetPlanner?.invalidate("场景包不含规划证据，待审关联已清除。");
   worker?.terminate();
   worker = null;
   const id = ++requestId;
@@ -439,10 +779,11 @@ input("bundle-file").onchange = async () => {
   try {
     if (file.size > 64 * 1024 * 1024) throw new Error("场景包超过64MiB");
     const bundle = unpackBundle(new Uint8Array(await file.arrayBuffer())),
-      next = await decodeBundle(bundle.manifest, bundle.files);
+      next = await decodeSceneBundle(bundle.manifest, bundle.files);
     if (id !== requestId) return;
-    populate(next.recipe);
     await adopt(next, id, true);
+    if (id === requestId && next.recipe.schemaVersion === 1)
+      populate(next.recipe);
   } catch (e) {
     if (id === requestId)
       state("error", `导入失败：${String(e)}。上一版仍保留。`);
@@ -483,13 +824,14 @@ for (const button of document.querySelectorAll<HTMLButtonElement>(
   "[data-camera]",
 ))
   button.onclick = () => {
-    if (!result) return;
+    const shown = previewResult ?? result;
+    if (!shown) return;
     applyCameraPreset(
       view,
-      result.heightfield,
+      shown.heightfield,
       button.dataset.camera as "top",
-      result.recipe.waterLevel,
-      result.scene.ground ? 6 : undefined,
+      shown.recipe.waterLevel,
+      shown.scene.ground ? 6 : undefined,
     );
     for (const b of document.querySelectorAll("[data-camera]"))
       b.classList.toggle("selected", b === button);
@@ -497,8 +839,10 @@ for (const button of document.querySelectorAll<HTMLButtonElement>(
 canvas.addEventListener("webglcontextlost", (e) => {
   e.preventDefault();
   lost = true;
+  sceneReview?.invalidate("图形上下文丢失，预览取消；恢复时仅加载已使用场景。");
+  view?.cancelPendingScene();
   planner?.invalidate("图形上下文丢失，规划关联已清除。", true);
-  assetPlanner?.invalidate("图形上下文丢失，规划关联已清除。", true);
+  assetPlanner?.invalidate("图形上下文丢失，规划待审关联已清除。");
   worker?.terminate();
   worker = null;
   requestId++;
@@ -508,47 +852,138 @@ canvas.addEventListener("webglcontextlost", (e) => {
 canvas.addEventListener("webglcontextrestored", () => {
   lost = false;
   renderFailed = true;
-  generate(result?.recipe ?? defaultRecipe);
+  const previous = result;
+  if (previous) {
+    const id = ++requestId;
+    state("building", "正在恢复上一版场景…");
+    void adopt(previous, id, true).catch((e) => {
+      if (id === requestId && !lost) state("error", `恢复失败：${e}`);
+    });
+  } else generate(defaultRecipe);
 });
 window.addEventListener("beforeunload", () => {
+  environmentPanel?.dispose();
+  sceneReview?.dispose();
   cancelAnimationFrame(raf);
   worker?.terminate();
   view?.dispose();
 });
-planner = mountPlanner($("planner"), {
-  getRecipe: readRecipe,
-  getSurface: () =>
-    input("algorithmVersion").value as F0Recipe["algorithmVersion"],
-  beforeApply() {
-    assetPlanner?.invalidate("原规划开始确认，待审选材已失效。");
-  },
-  applyRecipe(recipe) {
-    populate(recipe);
-    return generate(recipe);
-  },
-});
-assetPlanner = mountAssetSelection($("asset-planner"), {
-  beforeApply() {
-    planner?.invalidate("选材开始确认，原待审规划已失效。");
-  },
-  applyRecipe(recipe) {
-    populate(recipe);
-    return generate(recipe);
-  },
-});
 try {
-  view = await createGaussianView(canvas);
+  catalogContext = await parseCatalogContext(
+    JSON.parse(
+      new TextDecoder("utf-8", { fatal: true }).decode(
+        await readLocalBytes("/api/planner/assets/catalog", 1048576),
+      ),
+    ),
+  );
+  planner = mountPlanner($("planner"), {
+    catalogContext,
+    getRecipe: readRecipe,
+    getSurface: () =>
+      input("algorithmVersion").value as F0Recipe["algorithmVersion"],
+    beforeApply() {
+      assetPlanner?.invalidate("原规划开始确认，待审选材已失效。");
+    },
+    applyRecipe(recipe) {
+      populate(recipe);
+      return generate(recipe);
+    },
+  });
+  assetPlanner = mountAssetSelection(
+    $("asset-planner"),
+    {
+      beforeApply() {
+        planner?.invalidate("选材开始确认，原待审规划已失效。");
+      },
+      applyRecipe(recipe) {
+        if (recipe.schemaVersion === 1) populate(recipe);
+        return generate(recipe);
+      },
+    },
+    catalogContext,
+  );
+  view = await createView();
   view.setInteractive(true);
   view.setBackground(0xe9ecdf);
   new ResizeObserver(resize).observe(wrap);
   resize();
   raf = requestAnimationFrame(tick);
   populate(
-    new URLSearchParams(location.search).get("surface") === "baseline"
+    query.get("surface") === "baseline"
       ? defaultRecipe
-      : { ...riversideRecipe, algorithmVersion: "f0-riverside-grass-v2" },
+      : reviewEnabled && !catalogContext.prepared
+        ? {
+            ...riversideRecipe,
+            algorithmVersion: "f0-riverbank-grass-v1",
+            seed: 42,
+            waterLevel: 0,
+            requested: { rock: 0, reed: 4 },
+          }
+        : { ...riversideRecipe, algorithmVersion: "f0-riverside-grass-v2" },
   );
   generate();
+  if (reviewEnabled) {
+    reviewController = createPreviewController({
+      build: buildReview,
+      stage: stageReview,
+      record: createReviewRecord,
+      publish(next, record) {
+        previewResult = null;
+        result = next;
+        populate(next.recipe);
+        finishAdopt(next, requestId);
+        planner?.invalidate("当前场景来自新审阅流程。", true);
+        assetPlanner?.invalidate("当前场景来自新审阅流程。", true);
+        document.dispatchEvent(
+          new CustomEvent("review-used", { detail: record }),
+        );
+      },
+      persist: (record) =>
+        appendReviewRecord(localStorage, record, catalogContext, (job) => {
+          if (!navigator.locks)
+            return Promise.reject(
+              Error("浏览器不支持安全的并发保存，请下载记录。"),
+            );
+          return navigator.locks.request(
+            historyKey(record),
+            { mode: "exclusive" },
+            job,
+          );
+        }),
+    });
+    sceneReview = mountSceneReview(
+      $("scene-review"),
+      {
+        preview: reviewController.preview,
+        use: reviewController.use,
+        cancel: cancelReview,
+        getCommitted: () => result,
+      },
+      catalogContext,
+    );
+  }
+  const suspended = new Map<HTMLElement, boolean>();
+  let originalSceneTitle = "";
+  environmentPanel = mountEnvironmentPanel($("environment-panel"), wrap as HTMLElement, {
+    enter() {
+      if (measuring || lost || renderFailed || status.dataset.state !== "ready" ||
+          (reviewController && reviewController.getState().phase !== "idle"))
+        throw Error("请先结束当前构建、审阅或测量，再预览环境。");
+      for (const element of document.querySelectorAll<HTMLElement>("#advanced-compat, #scene-review, .camera-bar, .measurement-panel, .contrast")) {
+        suspended.set(element, element.inert); element.inert = true;
+      }
+      document.body.classList.add("environment-mode");
+      originalSceneTitle = $("scene-title").textContent ?? "";
+      $("scene-title").textContent = "导入环境 · 待画质验收";
+      view.setInteractive(false);
+    },
+    leave() {
+      for (const [element, inert] of suspended) element.inert = inert;
+      suspended.clear(); document.body.classList.remove("environment-mode");
+      $("scene-title").textContent = originalSceneTitle;
+      view?.setInteractive(!lost && !renderFailed);
+    },
+  });
 } catch (e) {
-  state("error", `无法启动WebGL：${String(e)}`);
+  state("error", `无法启动目录或WebGL：${String(e)}`);
 }

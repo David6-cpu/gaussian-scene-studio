@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" role="img" aria-labelledby="title description">
+  <title id="title">一句话，走向可探索的湿地</title>
+  <desc id="description">研究路线概念图，非生成结果。已有路线为需求、人工审阅、目录选材与程序布局、网页浏览和保存。已实现的另一条路线为本地 World JSON 与 SPZ 导入、预览或取消、保存与重开；外部环境生成尚未接入。可信知识热点、探索任务和教学评测属于后续目标。真实河岸画质仍待验收；背景不等于可编辑对象或物理碰撞；自研重点为约束、知识组织、交互与评测，非基础模型。</desc>
+  <defs>
+    <marker id="green-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L8 5 L1 9" fill="none" stroke="#557767" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="blue-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L8 5 L1 9" fill="none" stroke="#477C94" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="640" rx="24" fill="#F7F6EF"/>
+  <rect x="1" y="1" width="1198" height="638" rx="23" fill="none" stroke="#DEDFD3"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif">
+    <rect x="44" y="29" width="340" height="30" rx="15" fill="#E7EBE0"/>
+    <text x="61" y="51" font-size="18" font-weight="600" fill="#385546">研究路线概念图 · 非生成结果</text>
+    <text x="44" y="108" font-size="38" font-weight="700" fill="#233F33">一句话，走向可探索的湿地</text>
+    <text x="46" y="139" font-size="19" fill="#5C6B62">面向科普教学的可控三维场景生成与交互研究</text>
+
+    <g aria-hidden="true">
+      <rect x="896" y="29" width="260" height="112" rx="16" fill="#E9EDE0"/>
+      <path d="M1069 29 C1090 51 1015 59 1037 83 C1054 103 1010 118 979 141 L1050 141 C1096 112 1105 92 1082 72 C1063 55 1130 48 1120 29 Z" fill="#B8D6DD"/>
+      <path d="M1092 29 C1100 51 1044 63 1064 84 C1080 105 1040 124 1016 141" fill="none" stroke="#EFF5EF" stroke-width="3"/>
+      <path d="M929 109 L927 90 M929 109 L918 96 M929 109 L939 94 M950 116 L951 98 M950 116 L940 104 M1125 112 L1127 92 M1125 112 L1116 99 M1125 112 L1136 97" fill="none" stroke="#6A8A63" stroke-width="3" stroke-linecap="round"/>
+      <path d="M968 99 Q963 91 970 86 Q980 83 986 91 L984 99 Z M1097 123 Q1091 114 1101 111 Q1112 112 1114 122 Z" fill="#ADB7A5"/>
+    </g>
+
+    <line x1="44" y1="159" x2="1156" y2="159" stroke="#DADFD3"/>
+
+    <text x="44" y="195" font-size="22" font-weight="700" fill="#375E4C">A · 已有场景构建</text>
+    <g stroke="#CBD9CA" stroke-width="1.5" fill="#EEF2E8">
+      <rect x="44" y="215" width="208" height="76" rx="13"/>
+      <rect x="300" y="215" width="208" height="76" rx="13"/>
+      <rect x="556" y="215" width="320" height="76" rx="13"/>
+      <rect x="924" y="215" width="232" height="76" rx="13"/>
+    </g>
+    <g fill="#2C503D" text-anchor="middle">
+      <text x="148" y="246" font-size="22" font-weight="600">需求</text>
+      <text x="148" y="272" font-size="18">一句话描述</text>
+      <text x="404" y="246" font-size="22" font-weight="600">人工审阅</text>
+      <text x="404" y="272" font-size="18">修订与确认</text>
+      <text x="716" y="246" font-size="22" font-weight="600">目录选材与程序布局</text>
+      <text x="716" y="272" font-size="18">组合已有资源</text>
+      <text x="1040" y="246" font-size="22" font-weight="600">网页浏览 / 保存</text>
+      <text x="1040" y="272" font-size="18">保留场景与版本</text>
+    </g>
+    <g fill="none" stroke="#557767" stroke-width="2" marker-end="url(#green-arrow)">
+      <path d="M264 253 H287"/>
+      <path d="M520 253 H543"/>
+      <path d="M888 253 H911"/>
+    </g>
+
+    <text x="44" y="333" font-size="22" font-weight="700" fill="#356980">B · 已实现本地环境导入</text>
+    <rect x="44" y="353" width="200" height="100" rx="13" fill="#F7F6EF" stroke="#9EACAC" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="144" y="383" text-anchor="middle" font-size="22" font-weight="600" fill="#5A6E72">外部环境生成</text>
+    <text x="144" y="412" text-anchor="middle" font-size="18" fill="#69787A">下一步试验</text>
+    <text x="144" y="437" text-anchor="middle" font-size="18" fill="#69787A">尚未接入</text>
+    <path d="M256 403 H280" fill="none" stroke="#7296A4" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#blue-arrow)"/>
+    <g stroke="#C7DADE" stroke-width="1.5" fill="#EAF2F3">
+      <rect x="294" y="353" width="330" height="100" rx="13"/>
+      <rect x="674" y="353" width="216" height="100" rx="13"/>
+      <rect x="940" y="353" width="216" height="100" rx="13"/>
+    </g>
+    <g fill="#2F6175" text-anchor="middle">
+      <text x="459" y="394" font-size="22" font-weight="600">World JSON + SPZ</text>
+      <text x="459" y="425" font-size="18">选择本地文件</text>
+      <text x="782" y="394" font-size="22" font-weight="600">预览 / 取消</text>
+      <text x="782" y="425" font-size="18">可返回原场景</text>
+      <text x="1048" y="394" font-size="22" font-weight="600">保存 / 重开</text>
+      <text x="1048" y="425" font-size="18">浏览器存储与备份</text>
+    </g>
+    <g fill="none" stroke="#477C94" stroke-width="2" marker-end="url(#blue-arrow)">
+      <path d="M636 403 H661"/>
+      <path d="M902 403 H927"/>
+    </g>
+
+    <rect x="44" y="480" width="1112" height="48" rx="12" fill="none" stroke="#A9B3A7" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="65" y="511" font-size="20" font-weight="600" fill="#66715F">后续目标</text>
+    <text x="292" y="512" font-size="22" fill="#52624E">可信知识热点 · 探索任务 · 教学评测</text>
+
+    <g font-size="18" fill="#647167">
+      <circle cx="50" cy="558" r="3" fill="#7B927B"/>
+      <text x="64" y="564">真实河岸画质仍待验收。</text>
+      <circle cx="50" cy="583" r="3" fill="#7B927B"/>
+      <text x="64" y="589">可浏览背景不等于可编辑对象，也不自带物理碰撞。</text>
+      <circle cx="50" cy="608" r="3" fill="#7B927B"/>
+      <text x="64" y="614">自研重点：约束、知识组织、交互与评测；不宣称自研基础模型。</text>
+    </g>
+  </g>
+</svg>

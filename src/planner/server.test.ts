@@ -8,7 +8,7 @@ import {
   createLlamaTransport,
   readLlamaStatus,
 } from "./server";
-import { MODEL, LLAMA_MODEL, planScene, type Transport } from "./service";
+import { MODEL, LLAMA_MODEL, LLAMA_SMALL_MODEL, planScene, type Transport } from "./service";
 import { parseDraft } from "./history";
 import { proposalFromRecipe } from "./contract";
 import { defaultRecipe } from "../recipe";
@@ -74,6 +74,41 @@ const headers = {
   origin: "http://127.0.0.1:4173",
   "content-type": "application/json",
 };
+it("v2 review endpoint preserves river intent and rejects conflicts before inference", async () => {
+  const { defaultReviewRequestV2 } = await import("../review-v2/requirements");
+  const request = { ...defaultReviewRequestV2, water: { mode: "river", explicitLevel: null } };
+  let calls = 0;
+  const url = await start(undefined, { reviewTransport: async () => { calls++; return { ...good, model: LLAMA_SMALL_MODEL, raw: JSON.stringify(request) }; } });
+  const send = (prompt: string) => httpFetch(url + "/api/planner/review/requirements-v2", { method: "POST", headers, body: JSON.stringify({ prompt }) });
+  const response = await send("河岸上放一些低矮草丛和石头");
+  expect(response.status).toBe(200);
+  expect((await response.json()).request.water).toEqual({ mode: "river", explicitLevel: null });
+  expect(calls).toBe(1);
+  const conflict = await send("水位0，不放水");
+  expect(conflict.status).toBe(400);
+  expect((await conflict.json()).error).toMatch(/澄清/);
+  expect(calls).toBe(1);
+  const badOrigin = await httpFetch(url + "/api/planner/review/requirements-v2", { method: "POST", headers: { ...headers, origin: "https://evil.test" }, body: JSON.stringify({ prompt: "河岸" }) });
+  expect(badOrigin.status).toBe(403);
+  expect(calls).toBe(1);
+});
+it("serves only the frozen local catalog and allowlisted asset bytes", async()=>{
+  const {preparedFixture}=await import("../../tests/support/prepared-fixture");
+  const {makeCatalogContext}=await import("../assets/catalog/context");
+  const {asset,zip}=await preparedFixture(),version=asset.definition.metadata.contentVersion;
+  const context=await makeCatalogContext(asset,{contentVersion:version,licenseChecked:true,decision:"trial",limitations:["Test"],recordReference:"docs/validation/riverside-integration.md"});
+  const url=await start(undefined,{catalog:{context,packageBytes:zip}});
+  const cat=await httpFetch(url+"/api/planner/assets/catalog",{headers});expect(cat.status).toBe(200);expect(await cat.json()).toEqual(context);
+  const path=`/api/planner/assets/package/test-prepared-ground/${version}`;
+  const pkg=await httpFetch(url+path,{headers});expect(pkg.status).toBe(200);expect(new Uint8Array(await pkg.arrayBuffer())).toEqual(zip);
+  for(const route of ["/api/planner/assets/catalog",path]){
+    expect((await httpFetch(url+route,{method:"POST",headers,body:"{}"})).status).toBe(405);
+    expect((await httpFetch(url+route,{headers:{...headers,origin:"https://evil.test"}})).status).toBe(403);
+  }
+  expect((await httpFetch(url+path+"bad",{headers})).status).toBe(404);
+  const license=await httpFetch(url+"/assets/local-ground/test-prepared-ground/LICENSE.txt",{headers});expect(await license.text()).toBe(asset.definition.licenseText);
+  expect((await httpFetch(url+"/assets/local-ground/test-prepared-ground/../../private",{headers})).status).toBe(404);
+});
 describe("local planner HTTP boundary", () => {
   it("routes explicit 3B separately and rejects invalid backend/model pairs", async () => {
     const small = "qwen2.5-3b-instruct-q4_k_m";
@@ -459,4 +494,11 @@ it('asset stages use new routes while sharing same-origin and busy protection wi
  expect((await send('/api/planner/generate',{prompt:'湿地'})).status).toBe(429);release();
  expect((await first).status).toBe(200);
  const chosen=await send('/api/planner/assets/choose',{request});expect(chosen.status).toBe(200);expect((await chosen.json()).choices).toEqual([{key:'ground',assetId:'riverside-ground-v1'}]);
+});
+it('extended choose requires the frozen catalog fingerprint and refuses supplied candidates',async()=>{
+ const {preparedFixture}=await import('../../tests/support/prepared-fixture');const {makeCatalogContext}=await import('../assets/catalog/context');const {defaultAssetRequest}=await import('../selection/contract');
+ const {asset,zip}=await preparedFixture(),context=await makeCatalogContext(asset,{contentVersion:asset.definition.metadata.contentVersion,licenseChecked:true,decision:'trial',limitations:['test'],recordReference:'docs/validation/test.md'},'prepared-ground-only');
+ let calls=0;const url=await start(undefined,{catalog:{context,packageBytes:zip},assetTransport:async()=>{calls++;return {raw:JSON.stringify({choices:[{key:'ground',assetId:asset.definition.metadata.id},{key:'rocks',assetId:'river-rock-v1'},{key:'plants',assetId:'river-low-grass-v2'}]}),model:LLAMA_SMALL_MODEL,done:true,doneReason:'stop'};}});
+ for(const body of [{request:defaultAssetRequest},{request:defaultAssetRequest,catalogVersion:'asset-catalog-v1'},{request:defaultAssetRequest,catalogVersion:context.catalogVersion,entries:[]}])expect((await httpFetch(url+'/api/planner/assets/choose',{method:'POST',headers,body:JSON.stringify(body)})).status).toBe(400);
+ expect(calls).toBe(0);const res=await httpFetch(url+'/api/planner/assets/choose',{method:'POST',headers,body:JSON.stringify({request:defaultAssetRequest,catalogVersion:context.catalogVersion})});expect(res.status).toBe(200);expect((await res.json()).catalogVersion).toBe(context.catalogVersion);expect(calls).toBe(1);
 });

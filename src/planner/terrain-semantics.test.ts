@@ -11,7 +11,7 @@ const reply = (change: object) => ({ raw: JSON.stringify({ ...base, ...change })
 const run = (prompt: string, transport: Parameters<typeof planScene>[1]) => planScene(prompt, transport, new AbortController().signal, "llama.cpp", LLAMA_SMALL_MODEL);
 
 describe("terrain intent checks do not manufacture model output", () => {
-  it("detects the observed flat/layer mistakes and retries once with concrete differences", async () => {
+  it("detects observed flat/layer mistakes but rejects the second reply that still violates no-water", async () => {
     let calls = 0;
     const input = cases.find(c => c.id === "observed-layers")!;
     const original = reply({ amplitude: 0.6, octaves: 3 });
@@ -23,9 +23,11 @@ describe("terrain intent checks do not manufacture model output", () => {
       return reply({ amplitude: 0, octaves: 1 });
     });
     expect(calls).toBe(2);
-    expect(result).toMatchObject({ source: "llama.cpp", repaired: true, templateVersion: "parameters-v2", proposal: { amplitude: 0, octaves: 1 } });
+    expect(result).toMatchObject({ source: "default", repaired: false, templateVersion: "parameters-v2" });
     expect(result.attempts[0].raw).toBe(original.raw);
     expect(result.attempts[0].error).toContain("语义");
+    expect(result.attempts[1].raw).toBe(reply({ amplitude: 0, octaves: 1 }).raw);
+    expect(result.attempts[1].error).toContain("无水");
   });
   it("labels persistent semantic failure as fallback, preserving both raw outputs", async () => {
     const bad = reply({ amplitude: 0.5, octaves: 3 });

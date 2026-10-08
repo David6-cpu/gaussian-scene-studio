@@ -198,3 +198,8 @@ test("LOD changes retire compute materials and keep shared sources usable", asyn
     ).toBe(baseline.refs);
   }
 });
+test('prepared swaps roll back idempotently and obsolete swaps cannot replace newer content',async({page})=>{
+ await page.goto('/tests/harness.html');await settled(page);const before=await page.evaluate(()=>({stats:window.testView.stats(),camera:window.testView.getCamera()}));
+ await page.evaluate(async()=>{const a=window.fixture();a.instances=[];const swap=await window.testView.prepareScene(a);swap.activate();window.testView.setCamera([5,5,5],[0,0,0]);swap.rollback();swap.rollback();});await settled(page);expect(await page.evaluate(()=>({stats:window.testView.stats(),camera:window.testView.getCamera()}))).toEqual(before);
+ await page.evaluate(async()=>{const old=await window.testView.prepareScene(window.fixture());await window.testView.setScene(window.fixture());old.rollback();let rejected=false;try{old.activate();}catch{rejected=true;}if(!rejected)throw Error('stale activation accepted');});await settled(page);expect(await page.evaluate(()=>window.testView.stats())).toEqual(before.stats);
+});

@@ -1,94 +1,116 @@
 # Gaussian Scene Studio
 
-**Asset-guided AI selection, reproducible procedural placement, and unified Gaussian splat rendering.**
+### From a scene idea to a reviewable, explorable wetland
 
-[中文](README.md) · [Local models](docs/LOCAL_MODELS.md) · [Third-party notices](THIRD_PARTY_NOTICES.md) · [SH import option](docs/SH_IMPORT.md)
+An undergraduate research prototype for ecological education: natural-language requirements, an attributed asset catalog, procedural placement and Gaussian Splatting, with inspectable choices and reproducible results.
 
-An undergraduate research prototype that turns natural-language requirements into reviewable asset choices and scene recipes. Procedural rules place the assets, and a browser renders, explores and saves the result. **A small wetland scene is the currently validated use case.**
+[中文](README.md) · [Local models](docs/LOCAL_MODELS.md) · [Third-party notices](THIRD_PARTY_NOTICES.md)
 
-The research focuses on constraints, selection from a real catalog, missing-asset handling and reproducible layout. It uses existing language models and third-party scans; it does not train a foundation model or reconstruct an arbitrary new 3D world directly from a prompt.
+![Concept diagram: catalog-based construction and local environment import lead to browsing; educational interaction remains planned](docs/images/project-concept.svg)
 
-## Workflow
+> **Research prototype.** Catalog selection, reviewable layouts and local SPZ import are implemented. External whole-world generation is not integrated. Real riverbank visual quality, knowledge hotspots and learning outcomes remain unverified. The diagram is a research concept, not generated output.
 
-Natural-language request → editable requirements → catalog candidates → LLM selects candidate IDs → independent validation → human approval → deterministic PCG → Gaussian rendering → local records and scene archive.
+## Research questions
 
-Missing resources are reported. Procedural substitutes are identified and require confirmation. Valid JSON alone does not establish that the model understood the request.
+A request such as “a riverbank with low grasses and stones” raises concrete questions: is the river present, do plants obscure it, are stones scanned or procedural, and can the terrain support the layout?
 
-## What works today
+- **Reviewable intent:** editable requirements, visible conflicts and missing resources, followed by human confirmation.
+- **Reproducible results:** asset identity, seeds, versions and camera state retained through local saves.
+- **Educational interaction:** future knowledge hotspots and exploration tasks on manually reviewed scenes, followed by learning evaluation.
 
-- A catalog with seven entries: four trial assets and three compatibility entries, including provenance, licensing, source type and point budgets.
-- Two-stage local AI selection: editable requirements, candidate retrieval, selection of existing IDs and explicit approval.
-- Seeded placement with boundary, water-level, slope, spacing and support checks, including shortfall reporting.
-- One Spark rendering pipeline for a scanned Riverside surface and procedural grass/reeds, stones and static water.
-- Local selection/plan records and self-contained scene ZIPs with version-specific validation.
-- An explicit offline SH3 range-correction option that preserves the native path and does not replace default assets.
+Our work concerns constraints, knowledge organization, interaction and evaluation. Foundation models, world-generation backends and scans come from existing third-party work.
 
-The Riverside crop contains 64,949 SH3 Gaussians. Its 4×4 area uses display units, not a surveyed metric scale. Scenes are limited to 20 instances and 250,000 active Gaussians.
+## Actual browser previews
 
-## Run without a model
+![Actual Riverside scan crop with procedural static water](docs/images/riverbank-preview.png)
 
-From the project root:
+**Riverbank candidate — actual screenshot.** Riverside is by [VeryOS](https://superspl.at/scene/8f52baf1), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), used as an attributed continuous crop. Water is procedural Gaussian data. This controlled preview is not evidence of successful prompt-to-world generation. Scan softness, flat water and clipped boundaries still fail visual acceptance. [Results](docs/validation/riverbank-review-preview-results.md)
+
+| Local environment import | Original scene restored |
+|---|---|
+| ![Three-point coordinate fixture, not a real riverbank](docs/images/environment-fixture.png) | ![Procedural wetland baseline restored after leaving the imported environment](docs/images/current-workbench.png) |
+| World JSON + SPZ → preview → save → reload/reopen. These points are a **self-authored fixture**, not a generated riverbank. | Cancel/return preserves the scene and camera. This image shows the **procedural baseline**. |
+
+[Import evidence](docs/validation/environment-import-results.md) · [Image provenance](docs/images/README.md)
+
+## Current progress
+
+Documentation updated **2026-10-08**; engineering checks below were completed on 2026-10-07.
+
+| Area | Implemented | Remaining limits |
+|---|---|---|
+| Catalog and local AI | Seven entries: four trial assets and three compatibility entries; editable requirements, candidate IDs, source confirmation and missing-asset feedback | Small catalog; arbitrary language and cross-environment behavior unverified |
+| Procedural placement | Seeded layouts with boundary, water-level, slope, spacing and support checks; shortfalls reported | Height proxies are not exact collision or ecological validation |
+| Riverbank review / water intent v2 | Cancellable previews and save-on-use; required water separated from a known numeric level | Unknown geometry stays pending; the original request has not produced an accepted scene end to end |
+| Local environment import | World JSON + SPZ; preview/cancel, IndexedDB save/reopen and `.wetenv` backups | No integrated paid generation; real-asset quality and large-scene performance unverified |
+| Versioned assets | Legacy archives, controlled ground admission and optional offline SH3 range correction | No silent replacement; color corrections do not repair geometry |
+| Ecological education | Wetland theme and interaction direction selected | Hotspots, exploration tasks and teaching evaluation are future work |
+
+Import supports **gzip SPZ v2/v3, SH0–3**, up to 250,000 points, 64MiB source bytes and 32MiB streamed expansion. SPZ v4 is rejected. Start with a 100k asset. Storage permits eight environments / 128MiB total source bytes. A successful save does not establish visual quality.
+
+Catalog scenes allow 20 instances and 250,000 active Gaussians. The Riverside crop has 64,949 SH3 Gaussians; its 4×4 extent uses display units, not surveyed meters. Whole-environment splats do not automatically provide editable objects, species labels or collision.
+
+## Run locally
+
+Requires Node.js, npm and a WebGL2 desktop browser. Tested on Node 25.7.0, npm 11.10.1, macOS / Apple M5 16GB and Google Chrome. Other platforms have not received equivalent validation.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open <http://127.0.0.1:4173/> in a WebGL2-capable desktop browser. Use manual controls or the offline planning example. Drag to orbit, right-drag to pan, and scroll to zoom. Save a scene ZIP and reopen it locally.
+Open <http://127.0.0.1:4173/>. Use manual controls or the offline planning example without a model. Drag to orbit, right-drag to pan and scroll to zoom. Scene ZIPs can be saved and reopened locally.
 
-Validated development environment: Node 25.7.0, npm 11.10.1, macOS / Apple M5 with 16 GB memory, and Google Chrome. Other platforms have not received equivalent validation.
+The environment panel accepts a local World JSON and SPZ. Preview before saving or downloading a `.wetenv` backup. Scene ZIPs and environment backups are different formats. Importing SPZ does not call a generation service.
 
-No model weights are bundled. A message that the app used a default fallback means the input was not interpreted by a model.
+### Optional local AI
 
-## Enable local AI
+The tested setup is **Qwen2.5-3B-Instruct Q4_K_M + llama.cpp**. Follow [setup instructions](docs/LOCAL_MODELS.md), then use `/?planner=3b`. The riverbank review candidate is at `/?review=1&planner=3b`. Prompts and UI are primarily Chinese; equivalent English behavior is not validated.
 
-The tested setup uses **Qwen2.5-3B-Instruct Q4_K_M with llama.cpp**. Follow the [local model instructions](docs/LOCAL_MODELS.md), start the local service, and open <http://127.0.0.1:4173/?planner=3b>. The current prompts and UI are primarily Chinese; equivalent English-language behavior has not been validated.
+No weights or provider keys are bundled. A default-fallback message means the request was not interpreted by a model. Procedural grasses, reeds and added stones cannot silently satisfy a request for scanned assets.
 
-The Mac `.command` shortcuts depend on the original development machine's existing Homebrew runtime and verified weights. They do not install dependencies or download a model. Use manual setup on another machine.
+Mac `.command` shortcuts require the original machine's existing runtime and verified weights. They do not install a runtime or download models. Configure a new machine manually.
 
-The 3B model uses the **Qwen Research License for non-commercial research/evaluation**. The 7B configuration has a different license and must not be treated as interchangeable. See [third-party notices](THIRD_PARTY_NOTICES.md).
+**Qwen 3B uses the Qwen Research License for non-commercial research/evaluation.** Do not apply the 7B model's Apache-2.0 license to it. [Notices](THIRD_PARTY_NOTICES.md)
 
-## Structure
+## Structure and validation
 
 | Path | Responsibility |
 |---|---|
-| `src/selection/` | Two-stage requirements and candidate selection |
-| `src/planner/` | Local model adapters, planning and version records |
-| `src/assets/` | Catalog, procedural assets and placement |
-| `src/terrain/` | Terrain, water and height proxies |
-| `src/gaussian/` | Spark rendering, resource lifecycle and point budgets |
-| `src/io/` | Scene archives, hashes and SH3 variant packages |
-| `scripts/` | Local launchers and offline asset preparation |
-| `public/` | Attributed runtime and diagnostic assets |
-| `tests/` | Browser checks and repeatable fixtures |
+| `src/selection/`, `src/planner/` | Requirements, catalog selection and local model adapters |
+| `src/review-v2/` | Water intent and versioned review contracts |
+| `src/environment/` | SPZ validation, preview lifecycle, storage and backups |
+| `src/assets/`, `src/terrain/` | Catalog, procedural assets, placement and terrain proxies |
+| `src/gaussian/`, `src/io/` | Spark rendering, lifecycle and versioned archives |
+| `scripts/`, `tests/` | Local tooling, browser checks and fixtures |
 
-TypeScript, Vite, Three.js, Spark, Vitest and Playwright form the main stack. Versions are pinned in the lockfile. The local planning API runs with the Vite development/preview server; a static host alone does not provide model inference.
+TypeScript, Vite, Three.js, Spark, Vitest and Playwright form the stack, with versions pinned in the lockfile. The planning API runs with Vite's development/preview server; static hosting alone does not provide inference.
 
-## Checks
+Checks on 2026-10-07: **514 unit + eight launcher tests, type checking and production build passed; Chrome functional checks: 110 passed / 15 conditional skips.** Eight legacy visual cases were excluded. This does not claim that all browser tests or visual quality pass. Independent review found an initialization timeout/cancellation issue, fixed with regressions observed failing before the fix and passing afterward.
 
 ```sh
 npm test
 npm run typecheck
 npm run build
-npm run test:e2e
+# The functional scope reported above:
+npx playwright test --project=functional --grep-invert 'offline river visibility'
 ```
 
-Browser tests require installed Google Chrome and exclusive use of local port 4173. Stop any manual development server first.
+Browser checks use installed Google Chrome and local port 4173. `npm run test:e2e` includes additional visual cases. A large-chunk build warning remains.
 
-Latest code-baseline checks, 2026-10-04: 327 unit tests, eight launcher tests, type checking and build passed. The optional SH3 import also passed real-browser save/reopen comparisons. These are bounded engineering results, not general language, final image quality or long-term performance guarantees. The build still reports a large-chunk warning.
+[Environment import](docs/validation/environment-import-results.md) · [Water intent v2](docs/validation/water-semantics-v2-results.md) · [Riverbank review](docs/validation/riverbank-review-preview-results.md) · [Controlled ground admission](docs/validation/controlled-ground-admission-results.md) · [SH3 import](docs/SH_IMPORT.md)
 
-## Limits and next steps
+## Next research steps
 
-Only the wetland flow is validated. Snow mountains, rainforests and arbitrary multi-environment composition are not available. The catalog is small, and model interpretation of negation, source preferences and water levels can fail.
+- Validate a real whole-scene SPZ for river, grass and rock appearance and device resource use.
+- Compare raw prompts, ordinary expansion and structured constraints with the same backend and budget, using human checks or blinded ratings.
+- Add three to five manually curated knowledge hotspots and one exploration task to an accepted scene.
+- Extend to wetland plant zones, food relationships and water-quality scenarios.
 
-Scans retain softness, crop boundaries and coverage gaps. SH correction mostly changes color/tone. Height proxies are engineering approximations: splats do not automatically provide physics, editable objects or species labels.
+These are research goals, not shipped features or quality guarantees. Team size, external budget and teaching evaluation remain open.
 
-Next steps are qualified assets, a second environment with explicit content/version handling, fixed-budget selection/layout experiments, and educational hotspots with learning evaluation. These are research goals, not delivery commitments.
+## Licensing and acknowledgements
 
-Weights, personal scene saves, large raw scans, private experiment records and machine logs are excluded from source distribution. The offline SH3 variant package is separate from the app's main scene ZIP format.
+Original code has **no selected project-wide open-source license**. Public visibility does not grant blanket MIT terms. Dependencies, models and assets retain their own licenses.
 
-## Licensing
-
-No project-wide open-source license has been selected for original code. Dependencies, models and assets retain their own licenses; this is not a blanket MIT-licensed asset collection.
-
-Thanks to Spark, Three.js, Qwen, VeryOS, Marcel Padilla and Loop CE. Runtime and diagnostic scans retain source, CC BY 4.0 attribution and modification notices. See [third-party notices](THIRD_PARTY_NOTICES.md).
+Thanks to Spark, Three.js, Qwen, VeryOS, Marcel Padilla and Loop CE. Distributed assets retain source, CC BY 4.0 attribution and modification notices. Weights, personal saves, provider keys, large raw scans and private logs are excluded. [Third-party notices](THIRD_PARTY_NOTICES.md)

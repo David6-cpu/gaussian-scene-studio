@@ -16,6 +16,116 @@
 body {
   margin: 0;
 }
+[hidden] {
+  display: none !important;
+}
+.review-mode {
+  background: #f6f6f0;
+}
+.review-mode .workspace {
+  grid-template-columns: 360px minmax(0, 1fr);
+}
+.review-mode .sidebar {
+  padding: 22px;
+}
+.review-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 9px;
+}
+#review-prompt {
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+  line-height: 1.7;
+  padding: 12px;
+  border: 1px solid #c5d3bd;
+  border-radius: 8px;
+  color: #23372a;
+  background: #fffef9;
+}
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.review-summary {
+  padding: 12px 14px;
+  margin: 15px 0;
+  background: #edf2e6;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.75;
+}
+.review-summary p {
+  margin: 5px 0;
+}
+#review-adjust {
+  border: 1px solid #dde2d6;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0;
+}
+#review-adjust > label:not(.review-choice) {
+  display: block;
+  margin: 9px 0;
+  line-height: 1.8;
+}
+.review-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 12px;
+  line-height: 1.65;
+  margin: 11px 0;
+}
+.review-choice input {
+  flex: 0 0 auto;
+  margin-top: 4px;
+}
+#review-status {
+  line-height: 1.8;
+  font-size: 12px;
+  padding: 10px 0;
+}
+#review-status[data-phase="error"] {
+  color: #8c3c22;
+}
+.review-use {
+  width: 100%;
+  font-size: 14px;
+  padding: 12px;
+}
+.review-records {
+  padding-bottom: 12px;
+}
+#advanced-compat > summary {
+  font-size: 12px;
+  padding: 12px 0;
+}
+.review-mode #advanced-compat .scene-stats {
+  position: static;
+  display: flex;
+  margin: 12px 0;
+}
+.review-mode #advanced-compat .measurement-panel {
+  display: block;
+  padding: 12px 0;
+}
+#review-debug pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 800px) {
+  .review-mode .workspace {
+    grid-template-columns: 1fr;
+  }
+  .review-mode .sidebar {
+    max-height: none;
+  }
+}
 button,
 input,
 select {
@@ -528,3 +638,20 @@ summary {
   width: auto;
   margin-top: 4px;
 }
+
+.environment-mode .canvas-wrap > canvas,
+.environment-mode .canvas-wrap > .canvas-label,
+.environment-mode .canvas-wrap > .scene-stats,
+.environment-mode .canvas-wrap > .camera-bar { visibility: hidden; }
+.environment-mode #ground-credit, .environment-mode #build-time { display: none; }
+.environment-mode #advanced-compat,
+.environment-mode #scene-review,
+.environment-mode .measurement-panel,
+.environment-mode .contrast { opacity: .45; }
+.environment-view { position: absolute; inset: 0; z-index: 4; background: #101c1b; }
+.environment-view canvas { display: block; width: 100%; height: 100%; }
+.environment-view-label { position: absolute; top: 18px; left: 18px; color: #edf0e8; font-size: 12px; pointer-events: none; }
+#environment-panel input[type=file] { width: 100%; font-size: 12px; margin: 7px 0 12px; }
+#environment-status, #environment-info, #environment-library-status { line-height: 1.6; overflow-wrap: anywhere; }
+#environment-list { list-style: none; padding: 0; }
+#environment-list button { width: 100%; margin: 4px 0; overflow-wrap: anywhere; }

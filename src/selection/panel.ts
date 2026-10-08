@@ -1,5 +1,18 @@
-import type { F0Recipe } from "../gaussian/types";
-import { assetCatalog } from "../assets/catalog/entries";
+import type { SceneRecipe } from "../gaussian/types";
+import {
+  BUILTIN_CONTEXT,
+  type CatalogContext,
+} from "../assets/catalog/context";
+import { buildSelectedScene } from "../prepared-scene";
+import {
+  confirmPreparedAssetPlan,
+  importPreparedAssetPlan,
+  loadPreparedHistory,
+  savePreparedHistory,
+  type PreparedAssetPlanRecord,
+} from "./prepared-history";
+import { downloadBlob } from "../io/download";
+type SelectionRecord = AssetPlanRecord | PreparedAssetPlanRecord;
 import { preflightRecipe } from "../planner/contract";
 import { errorText } from "../planner/service";
 import {
@@ -30,11 +43,12 @@ export function mountAssetSelection(
   host: HTMLElement,
   binding: {
     beforeApply?: () => void;
-    applyRecipe: (r: F0Recipe) => number | undefined;
+    applyRecipe: (r: SceneRecipe) => number | undefined;
   },
+  context: CatalogContext = BUILTIN_CONTEXT,
 ) {
   host.innerHTML = `<details id="asset-details" class="planner-details"><summary>湿地 · 两阶段选材（3B试用）</summary>
-    <p class="footnote">先审阅需求，再让本机3B从真实目录返回资产ID。当前仅4项试用素材，每类通常只有1个候选，尚不能比较多种同类素材。固定4×4展示范围，非实测米制。</p>
+    <p class="footnote">先审阅需求，再让本机3B从真实目录返回资产ID。当前${context.entries.filter((a) => a.quality.status === "trial").length}项试用素材，每类候选有限，尚不能比较多种同类素材。固定4×4展示范围，非实测米制。</p>
     <label class="planner-label">场景想法<textarea id="asset-prompt" maxlength="1000" rows="3" placeholder="湿地，2组碎石和4丛低草，种子42"></textarea></label>
     <div class="planner-actions"><button id="asset-interpret">1 · 提取需求</button><button id="asset-cancel" disabled>取消模型请求</button></div>
     <p class="footnote">使用已配置的本机Qwen2.5 3B，适用于研究与评估。每阶段仅尝试一次，不自动下载或替换失败结果。页面不能核验权重。</p>
@@ -58,24 +72,28 @@ export function mountAssetSelection(
   const button = (id: string) => $<HTMLButtonElement>(id);
   let first: RequirementEvidence | null = null,
     selection: ChoiceEvidence | null = null,
-    current: AssetPlanRecord | null = null,
-    latest: AssetPlanRecord | null = null;
+    current: SelectionRecord | null = null,
+    latest: SelectionRecord | null = null;
   let parentId: string | null = null,
     origin: "local" | "imported" = "local",
     epoch = 0,
     controller: AbortController | null = null,
     busy = false,
     candidatesReady = false;
-  let awaiting: { id: number; record: AssetPlanRecord } | null = null,
-    history: AssetPlanRecord[] = [],
+  let awaiting: { id: number; record: SelectionRecord } | null = null,
+    history: SelectionRecord[] = [],
     historyError: string | null = null;
+  let choiceContext = context,
+    preparedHistoryError: string | null = null;
   editor.value = JSON.stringify(defaultAssetRequest, null, 2);
   function publish() {
     button("interpret").disabled = busy;
     button("choose").disabled = busy || !candidatesReady;
     button("query").disabled = busy;
     button("cancel").disabled = !controller;
-    const ids = selection ? proceduralIds(selection.choices) : [];
+    const ids = selection
+      ? proceduralIds(selection.choices, choiceContext)
+      : [];
     consent.disabled = !selection || ids.length === 0 || busy;
     button("confirm").disabled =
       busy || !selection || (ids.length > 0 && !consent.checked);
@@ -91,6 +109,7 @@ export function mountAssetSelection(
     });
   }
   function invalidate(reason = "待审选材已失效。", clearScene = false) {
+    choiceContext = context;
     epoch++;
     controller?.abort();
     controller = null;
@@ -116,11 +135,11 @@ export function mountAssetSelection(
   function query() {
     candidatesReady = false;
     const req = requestValue(),
-      rows = candidateSnapshot(req);
+      rows = candidateSnapshot(req, choiceContext);
     $("candidates").textContent = rows
       .map(
         (row) =>
-          `${row.key} × ${row.count}：${row.assetIds.length}个候选 — ${row.assetIds.map((id) => `${assetCatalog.find((a) => a.id === id)!.title} (${id})`).join("、")}`,
+          `${row.key} × ${row.count}：${row.assetIds.length}个候选 — ${row.assetIds.map((id) => `${choiceContext.entries.find((a) => a.id === id)!.title} (${id})`).join("、")}`,
       )
       .join("\n");
     candidatesReady = true;
@@ -128,9 +147,22 @@ export function mountAssetSelection(
     return req;
   }
   function review(s: ChoiceEvidence) {
-    const ids = proceduralIds(s.choices),
-      recipe = compileSelection(s.request, { choices: s.choices }, ids);
-    const p = preflightRecipe(recipe);
+    const ids = proceduralIds(s.choices, choiceContext),
+      recipe = compileSelection(
+        s.request,
+        { choices: s.choices },
+        ids,
+        choiceContext,
+      );
+    const p =
+      recipe.schemaVersion === 1
+        ? preflightRecipe(recipe)
+        : {
+            summary: buildSelectedScene(recipe, choiceContext).report,
+            warnings: [
+              "受控地表流程；高度代理为工程近似，未作旧F0性能合格判定。",
+            ],
+          };
     // This is read-only preflight. Actual apply compiles again with explicit human consent.
     $("selection").textContent =
       `${s.choices.map((c) => `${c.key}: ${c.assetId}`).join("\n")}\n实际可放置：${p.summary.accepted.rock}组碎石、${p.summary.accepted.reed}丛植物；${p.summary.activeSplats.toLocaleString()}活跃高斯\n${p.warnings.join("\n")}`;
@@ -167,7 +199,12 @@ export function mountAssetSelection(
       const payload =
         stage === "requirements"
           ? { prompt: prompt.value }
-          : { request: query() };
+          : {
+              request: query(),
+              ...(choiceContext.prepared
+                ? { catalogVersion: choiceContext.catalogVersion }
+                : {}),
+            };
       if (stage === "requirements") assertAssetPrompt(prompt.value);
       const c = new AbortController();
       controller = c;
@@ -186,7 +223,7 @@ export function mountAssetSelection(
         query();
         $("message").textContent = "需求已提取，请核对并编辑后再选材。";
       } else {
-        const parsed = parseChoiceEvidence(data);
+        const parsed = parseChoiceEvidence(data, choiceContext);
         if (!equal(parsed.request, requestValue()))
           throw Error("返回的需求与当前编辑内容不一致");
         review(parsed);
@@ -208,20 +245,60 @@ export function mountAssetSelection(
   function drawHistory() {
     const select = $<HTMLSelectElement>("history");
     select.replaceChildren();
-    for (const r of history) {
-      const o = document.createElement("option");
-      o.value = r.id;
-      o.textContent = `${r.confirmedAt} · 种子${r.recipe.seed} · ${r.selection.request.plantKind}`;
-      select.append(o);
+    for (const version of [1, 2]) {
+      const group = document.createElement("optgroup");
+      group.label = version === 1 ? "内置目录 · v1" : "受控目录 · v2";
+      for (const r of history.filter((r) => r.schemaVersion === version)) {
+        const o = document.createElement("option");
+        o.value = r.id;
+        o.textContent = `${r.confirmedAt} · 种子${r.recipe.seed} · ${r.selection.request.plantKind}`;
+        group.append(o);
+      }
+      if (group.children.length) select.append(group);
     }
     button("reopen").disabled = history.length === 0;
   }
-  const loaded = loadAssetHistory(localStorage).then((result) => {
-    history = result.records;
-    historyError = result.error;
-    $("storage").textContent = result.error ?? "独立选材历史，最多20条／1MiB。";
+  const loaded = Promise.all([
+    loadAssetHistory(localStorage),
+    loadPreparedHistory(localStorage, context),
+  ]).then(([legacy, prepared]) => {
+    history = [...prepared.records, ...legacy.records];
+    historyError = legacy.error;
+    preparedHistoryError = prepared.error;
+    $("storage").textContent =
+      [legacy.error, prepared.error].filter(Boolean).join("；") ||
+      "两种独立选材历史，各最多20条／1MiB。";
     drawHistory();
   });
+  async function persist(record: SelectionRecord) {
+    const error =
+      record.schemaVersion === 2 ? preparedHistoryError : historyError;
+    if (error) {
+      $("storage").textContent = `${error}；原数据保留，请下载本次记录。`;
+      return;
+    }
+    const saved =
+      record.schemaVersion === 2
+        ? await savePreparedHistory(localStorage, [
+            record,
+            ...history.filter(
+              (r): r is PreparedAssetPlanRecord => r.schemaVersion === 2,
+            ),
+          ])
+        : saveAssetHistory(localStorage, [
+            record,
+            ...history.filter(
+              (r): r is AssetPlanRecord => r.schemaVersion === 1,
+            ),
+          ]);
+    history = [
+      ...saved.records,
+      ...history.filter((r) => r.schemaVersion !== record.schemaVersion),
+    ];
+    drawHistory();
+    $("storage").textContent =
+      saved.error ?? saved.notice ?? "选材记录已保存到独立本机历史。";
+  }
   async function confirm() {
     if (button("confirm").disabled || !selection) return;
     binding.beforeApply?.();
@@ -232,33 +309,37 @@ export function mountAssetSelection(
     try {
       if (!equal(requestValue(), s.request))
         throw Error("需求已变化，请重新选材");
-      const ids = proceduralIds(s.choices);
-      const record = await confirmAssetPlan(
-        first,
-        s,
-        consent.checked ? ids : [],
-        parentId,
-        origin,
-      );
+      const ids = proceduralIds(s.choices, choiceContext);
+      const record = choiceContext.prepared
+        ? await confirmPreparedAssetPlan(
+            first,
+            s,
+            consent.checked ? ids : [],
+            choiceContext,
+            parentId,
+            origin,
+          )
+        : await confirmAssetPlan(
+            first,
+            s,
+            consent.checked ? ids : [],
+            parentId,
+            origin,
+          );
       if (token !== epoch) return;
       await loaded;
       if (token !== epoch) return;
-      latest = record;
-      if (historyError)
-        $("storage").textContent =
-          `${historyError}；原数据保留，请下载本次记录。`;
-      else {
-        const saved = saveAssetHistory(localStorage, [record, ...history]);
-        history = saved.records;
-        drawHistory();
-        $("storage").textContent =
-          saved.error ?? saved.notice ?? "选材记录已保存到独立本机历史。";
+      if (record.schemaVersion === 1) {
+        latest = record;
+        await persist(record);
       }
       const id = binding.applyRecipe(record.recipe);
       awaiting = id === undefined ? null : { id, record };
       $("message").textContent =
         id === undefined
-          ? "记录已确认，但场景未启动；可下载记录。"
+          ? record.schemaVersion === 2
+            ? "场景未启动，未保存成功选材记录。"
+            : "记录已确认，但场景未启动；可下载记录。"
           : "记录已确认，等待场景实际显示…";
       // A confirmed draft cannot be applied twice without a new explicit review.
       selection = null;
@@ -273,7 +354,8 @@ export function mountAssetSelection(
       }
     }
   }
-  function reopen(record: AssetPlanRecord) {
+  function reopen(record: SelectionRecord) {
+    choiceContext = record.schemaVersion === 2 ? context : BUILTIN_CONTEXT;
     first = record.requirements;
     prompt.value = first?.prompt ?? "";
     editor.value = JSON.stringify(record.selection.request, null, 2);
@@ -316,7 +398,11 @@ export function mountAssetSelection(
     const token = epoch;
     try {
       if (file.size > 1048576) throw Error("选材文件超过1MiB");
-      const record = await importAssetPlan(await file.text());
+      const content = await file.text();
+      const record =
+        JSON.parse(content)?.schemaVersion === 2
+          ? await importPreparedAssetPlan(content, context)
+          : await importAssetPlan(content);
       if (token === epoch) reopen(record);
     } catch (e) {
       if (token === epoch)
@@ -336,33 +422,40 @@ export function mountAssetSelection(
   };
   button("save").onclick = () => {
     if (!latest) return;
-    const url = URL.createObjectURL(
-        new Blob([exportAssetPlan(latest)], { type: "application/json" }),
-      ),
-      a = document.createElement("a");
-    a.href = url;
-    a.download = `wetland-${latest.id}.wetland-assets.json`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    try {
+      downloadBlob(
+        new Blob([JSON.stringify(latest, null, 2)], {
+          type: "application/json",
+        }),
+        `wetland-${latest.id}.wetland-assets.json`,
+      );
+    } catch (e) {
+      $("message").textContent = `下载失败：${errorText(e)}`;
+    }
   };
   publish();
   return {
     invalidate,
-    sceneReady(id: number, recipe: F0Recipe) {
+    sceneReady(id: number, recipe: SceneRecipe) {
       current =
         awaiting?.id === id && equal(awaiting.record.recipe, recipe)
           ? awaiting.record
           : null;
       if (current) $("message").textContent = "已确认选材对应的场景已显示。";
       awaiting = null;
+      if (current?.schemaVersion === 2) {
+        latest = current;
+        void persist(current);
+      }
       publish();
     },
     sceneFailed(id: number, error: string, displayUnknown = false) {
       if (displayUnknown) current = null;
       if (awaiting?.id === id) {
+        const prepared = awaiting.record.schemaVersion === 2;
         awaiting = null;
         $("message").textContent =
-          `场景生成或显示失败：${error}；已确认记录仍可下载。`;
+          `场景生成或显示失败：${error}；${prepared ? "未保存本次成功记录，上一场景保留。" : "已确认记录仍可下载。"}`;
       }
       publish();
     },

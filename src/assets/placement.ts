@@ -9,6 +9,11 @@ import type {
 } from "../gaussian/types";
 import { sampleHeight, sampleNormal } from "../terrain/heightfield";
 import { isRiverProps } from "../recipe";
+export interface PlacementSurface {
+  isWet: (x: number, z: number) => boolean;
+  waterPoints: readonly (readonly [number, number])[];
+  shorePlant: boolean;
+}
 export function anchorInstance(
   f: HeightField,
   a: AssetPrototype,
@@ -42,6 +47,7 @@ export function placeAssets(
   f: HeightField,
   r: F0Recipe,
   assets: AssetPrototype[],
+  surface?: PlacementSurface,
 ): {
   instances: Instance[];
   rejections: Record<string, number>;
@@ -49,8 +55,8 @@ export function placeAssets(
 } {
   let seed = r.seed >>> 0;
   const varied = isRiverProps(r.algorithmVersion);
-  const wet: [number, number][] = [];
-  if (r.algorithmVersion === "f0-riverside-reed-v1" && r.waterLevel !== null)
+  const wet: (readonly [number, number])[] = surface ? [...surface.waterPoints] : [];
+  if (!surface && r.algorithmVersion === "f0-riverside-reed-v1" && r.waterLevel !== null)
     for (let iz = 0; iz < f.nz; iz++)
       for (let ix = 0; ix < f.nx; ix++)
         if (f.heights[iz * f.nx + ix] < r.waterLevel)
@@ -109,13 +115,13 @@ export function placeAssets(
         continue;
       }
       const h = sampleHeight(f, x, z);
-      if (r.waterLevel !== null && h < r.waterLevel) {
+      if (surface ? surface.isWet(x, z) : r.waterLevel !== null && h < r.waterLevel) {
         reject("water");
         continue;
       }
       if (
         id === "reed" &&
-        r.algorithmVersion === "f0-riverside-reed-v1" &&
+        (surface ? surface.shorePlant : r.algorithmVersion === "f0-riverside-reed-v1") &&
         r.waterLevel !== null &&
         !wet.some(([wx, wz]) => (x - wx) ** 2 + (z - wz) ** 2 <= 0.9 ** 2)
       ) {

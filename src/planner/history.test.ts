@@ -23,6 +23,17 @@ class MemoryStorage {
   }
 }
 describe("planning records", () => {
+  it("reopens old riverbank null-water evidence without applying new live semantics", async () => {
+    const raw = JSON.stringify({ ...proposalFromRecipe(defaultRecipe), waterLevel: null });
+    const draft = await planScene("湿地", async () => ({ raw, model: MODEL, done: true, doneReason: "stop" }), new AbortController().signal);
+    const archived = { ...draft, prompt: "河岸上放一些低矮草丛和石头" };
+    const record = await confirmPlan(archived);
+    const imported = await importPlan(exportPlan(record));
+    expect(imported.draft.prompt).toBe(archived.prompt);
+    expect(imported.recipe.waterLevel).toBeNull();
+    expect(imported.draft.attempts[0].raw).toBe(raw);
+    expect(imported.recipeHash).toBe(record.recipeHash);
+  });
   it("roundtrips v3 backend evidence and rejects inconsistent source/backend claims", async () => {
     const draft = await planScene(
       "湿地",

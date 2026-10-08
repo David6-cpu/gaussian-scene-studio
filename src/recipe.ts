@@ -1,4 +1,4 @@
-import type { F0Recipe } from "./gaussian/types";
+import type { F0Recipe, RiverbankVersion } from "./gaussian/types";
 import { record, finite, integer, oneOf } from "./data-validation";
 export const defaultRecipe: F0Recipe = {
   schemaVersion: 1,
@@ -31,17 +31,27 @@ export const riversideRecipe: F0Recipe = {
 };
 export function isRiverProps(version: unknown): boolean {
   return (
+    isRiverbank(version) ||
     version === "f0-riverside-grass-v1" ||
     version === "f0-riverside-grass-v2" ||
     version === "f0-riverside-reed-v1"
   );
+}
+export function isRiverbank(version: unknown): version is RiverbankVersion {
+  return version === "f0-riverbank-grass-v1" || version === "f0-riverbank-reed-v1";
+}
+export function riverPlantKind(version: unknown): "low-grass" | "grass" | "reed" | null {
+  if (version === "f0-riverside-grass-v2" || version === "f0-riverbank-grass-v1") return "low-grass";
+  if (version === "f0-riverside-grass-v1") return "grass";
+  if (version === "f0-riverside-reed-v1" || version === "f0-riverbank-reed-v1") return "reed";
+  return null;
 }
 export function isRiverside(version: unknown): boolean {
   return version === "f0-riverside-v1" || isRiverProps(version);
 }
 export function sceneAssetLabel(version: unknown): string {
   if (isRiverProps(version))
-    return `Riverside 地表 · 程序${version === "f0-riverside-grass-v2" ? "低矮细叶草丛" : version === "f0-riverside-grass-v1" ? "草丛" : "芦苇"}与碎石候选（非实拍）`;
+    return `Riverside 地表 · 程序${riverPlantKind(version) === "low-grass" ? "低矮细叶草丛" : riverPlantKind(version) === "grass" ? "草丛" : "芦苇"}与碎石候选（非实拍）`;
   return isRiverside(version)
     ? "Riverside 地表试用 · 原合成植株与石头"
     : "合成高斯测试资产";
@@ -75,6 +85,8 @@ export function parseRecipe(input: unknown): F0Recipe {
         "f0-riverside-grass-v1",
         "f0-riverside-grass-v2",
         "f0-riverside-reed-v1",
+        "f0-riverbank-grass-v1",
+        "f0-riverbank-reed-v1",
       ] as const),
       recipeSource: oneOf(r.recipeSource, ["manual"] as const),
       seed: integer(r.seed, 0, 4294967295),

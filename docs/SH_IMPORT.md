@@ -50,3 +50,31 @@ const { manifest, arrays } = await readSh3Variant(zipBytes);
 当前 Riverside 原素材与旧存档已固定六数组摘要，不能原地换成修正版。若后续要提供主页选项，应另建明确的素材/内容版本，扩展对应目录与场景包合同，并验证旧版保持原样；本轮没有做这一步。SOG/SPZ 等其他输入格式、真正 float32 SH shader 和自动升级依赖也不在本版范围内。
 
 [根因、影响范围、数值与浏览器证据](validation/spark-sh-import-results.md)
+
+## 受控地表登记与主页接入（2026-10-04 增量）
+
+上文 `wetland-sh3-variant` 是独立诊断包。新增 `wetland-prepared-ground` v1 用于受控地表：需要完整 metadata、原文许可及固定4×4/0.1/41×41高度代理，并额外由人工审阅记录授权试用。不能把两种包互换或原地覆盖旧 Riverside。
+
+在项目工作树根目录使用已有 Node：
+
+```sh
+node scripts/prepare-ground.ts prepare \
+  --ply .local/candidate/source.ply --native .local/candidate/native.json \
+  --metadata .local/candidate/metadata.json --height-proxy .local/candidate/height.json \
+  --license .local/candidate/LICENSE.txt --purpose candidate \
+  --out .local/candidate/new-ground.zip
+
+node scripts/prepare-ground.ts register \
+  --package .local/candidate/new-ground.zip --review .local/candidate/review.json \
+  --root .local/new-ground-library --candidate-scope combined
+
+WETLAND_LOCAL_CATALOG=.local/new-ground-library/index.json npm run dev
+```
+
+`--mode native` 默认；显式 `--mode range-safe` 必须另存，产生另一内容版本。目标包和登记目录均不得已存在。`metadata.json` 按 `AssetMetadata` 去掉 `contentVersion`，六逻辑文件路径为 `public/assets/local-ground/<id>/<key>.u32`，许可路径为该目录 `LICENSE.txt`；工具生成内容身份。审阅 JSON 必须含匹配的 `contentVersion`、`licenseChecked:true`、`decision:"trial"`、非空 `limitations` 和本机相对 `recordReference`。请对实际资料核对后填写，包内自称 trial 不足以登记。
+
+索引及包必须在项目 `.local/` 中，路径逃逸、符号链接逃逸、包变动或审阅不符均拒绝启动。服务读取一次并冻结；更换配置需停服重启。`prepared-ground-only` 只收窄该次地表候选，旧存档解析不变。撤销变量后重启回到内置目录，原包和用户存档保留。
+
+新的场景 ZIP v3 自包含数组、许可与高度代理，撤销目录后仍能离线重开；新的选材 JSON v2 不含数组，必须找到相同已登记目录/内容才可再应用。新包不会自动获得目录信任。SHA 与人工记录不构成来源认证。
+
+[真实 Riverside 流程副本、回滚及存档验证](validation/controlled-ground-admission-results.md)。这条通道没有增加合格素材，也未将 range-safe 自动设为默认。

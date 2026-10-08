@@ -1,7 +1,28 @@
 import { test, expect } from "vitest";
 import { encodeBundle, decodeBundle, sha256 } from "./bundle";
 import { buildScene } from "../build";
+import { readFileSync } from "node:fs";
+import { riversideRecipe } from "../recipe";
+import { riversideData } from "../terrain/riverside-data";
+import type { GroundArrays } from "../gaussian/types";
 import { defaultTestRecipe as r } from "../../tests/support/fixtures";
+test.each(["f0-riverbank-grass-v1", "f0-riverbank-reed-v1"] as const)("%s ZIP v2 preserves water and rejects recipe/buffer substitution", async algorithmVersion => {
+  const source = buildScene({ ...riversideRecipe, algorithmVersion, waterLevel: 0, requested: { rock: 0, reed: 4 } });
+  source.scene.ground!.arrays = Object.fromEntries(riversideData.outputs.map(o => [o.key, new Uint32Array(Uint8Array.from(readFileSync(`public/assets/riverside-ground-v1/${o.filename}`)).buffer)])) as GroundArrays;
+  const bundle = await encodeBundle(source);
+  const loaded = await decodeBundle(bundle.manifest, bundle.files);
+  expect(loaded.scene.water!.data).toEqual(source.scene.water!.data);
+  expect(loaded.recipe.algorithmVersion).toBe(algorithmVersion);
+  const changed = JSON.parse(bundle.manifest);
+  expect(changed.version).toBe(2);
+  changed.recipe.algorithmVersion = "f0-riverside-grass-v2";
+  await expect(decodeBundle(JSON.stringify(changed), bundle.files)).rejects.toThrow();
+  const bytes = bundle.files.get("water.gsbin")!;
+  new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).setFloat32(4, 0.1, true);
+  const corrupted = JSON.parse(bundle.manifest);
+  corrupted.files.find((f: { name: string }) => f.name === "water.gsbin").sha256 = await sha256(bytes);
+  await expect(decodeBundle(JSON.stringify(corrupted), bundle.files)).rejects.toThrow();
+});
 test("versioned binary bundle round-trips scene, recipe and hashes", async () => {
   const source = buildScene(r),
     b = await encodeBundle(source),

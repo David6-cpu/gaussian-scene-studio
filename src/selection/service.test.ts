@@ -23,6 +23,27 @@ const reply = (value: unknown) => ({
   doneReason: "stop",
 });
 const signal = () => new AbortController().signal;
+test("new riverbank null-water output fails while the same archived evidence remains readable", async () => {
+  const prompt = "河岸上放一些低矮草丛和石头";
+  const request = { ...defaultAssetRequest, waterLevel: null };
+  let calls = 0;
+  await expect(interpretRequest(prompt, async () => { calls++; return reply(request); }, signal())).rejects.toThrow(/水/);
+  expect(calls).toBe(1);
+  expect(parseRequirementEvidence({ prompt, request, raw: JSON.stringify(request), model: LLAMA_SMALL_MODEL, elapsedMs: 1 }).request.waterLevel).toBeNull();
+});
+test.each(["要有水，但不要水", "不是不要水", "河里可能有水"])("water ambiguity stops before inference: %s", async prompt => {
+  let calls = 0;
+  await expect(interpretRequest(prompt, async () => { calls++; return reply(defaultAssetRequest); }, signal())).rejects.toThrow(/澄清/);
+  expect(calls).toBe(0);
+});
+test("dry riverbed and exact negative water level survive live interpretation", async () => {
+  for (const [prompt, level] of [["干涸河床，不放水，放4丛低草", null], ["河岸水位-0.025，2组石头、4丛低草", -0.025]] as const) {
+    const request = { ...defaultAssetRequest, waterLevel: level };
+    const result = await interpretRequest(prompt, async () => reply(request), signal());
+    expect(result.request.waterLevel).toBe(level);
+    expect(result.raw).toBe(JSON.stringify(request));
+  }
+});
 test("two stages preserve model evidence and deterministic candidate snapshot", async () => {
   const first = await interpretRequest(
     "湿地，2组石头和4丛低草",

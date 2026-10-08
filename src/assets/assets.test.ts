@@ -14,6 +14,24 @@ import {
   makeSharedFixture,
 } from "../../tests/support/fixtures";
 import type { BuiltScene } from "../gaussian/types";
+import { riversideRecipe } from "../recipe";
+import { buildScene } from "../build";
+import { sampleRiverbankWater, riverbankSurface } from "../terrain/riverbank-water";
+test.each(["f0-riverbank-grass-v1", "f0-riverbank-reed-v1"] as const)("%s places assets outside its displayed water domain", version => {
+  const recipe = { ...riversideRecipe, algorithmVersion: version, waterLevel: 0, requested: { rock: 2, reed: 6 } };
+  const built = buildScene(recipe);
+  const surface = riverbankSurface(sampleRiverbankWater(built.heightfield, recipe), version === "f0-riverbank-reed-v1");
+  expect(built.scene.instances.length).toBeGreaterThan(0);
+  for (const instance of built.scene.instances) {
+    const [x, , z] = instance.position;
+    expect(surface.isWet(x, z)).toBe(false);
+    if (surface.shorePlant && instance.assetId === "reed")
+      expect(surface.waterPoints.some(([wx, wz]) => Math.hypot(x - wx, z - wz) <= 0.9)).toBe(true);
+  }
+  const dry = buildScene({ ...recipe, waterLevel: null });
+  expect(dry.scene.water).toBeNull();
+  expect(dry.report.rejections["shore-distance"]).toBeUndefined();
+});
 test("both synthetic levels cover finite Gaussian surfaces", () => {
   const assets = makeSyntheticAssets();
   expect(assets.map((a) => a.id)).toEqual(["rock", "reed"]);

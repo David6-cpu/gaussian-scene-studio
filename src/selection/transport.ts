@@ -15,7 +15,7 @@ const systems: Record<AssetStage, string> = {
 - plantKind：低草=grass，芦苇=reed，无植被=none。只能一种植物，默认grass。
 - plantCount：植物丛数，逐字读取明确数字；无植被为0；未指定才默认4。
 - seed：用户给定的整数，未指定才默认42。
-- waterLevel：用户给定数值，未指定才默认0；不放水为null。
+- waterLevel：用户明确给定的水位数值（包括负数）必须保留；河岸/河流/溪流需要水面，不能填null。只有明确无水/不放水/干涸时为null；其他未指定数值时默认0。不要用默认值覆盖用户的无水或具体水位。
 - clarification：正常支持的要求必须输出JSON空字符串 ""，不能输出“空串”等文字。不支持环境、两种植被、未知素材、指定空间关系、非4×4展示尺寸、地形编辑、超过20组/丛总数或矛盾要求，用非空中文说明需要澄清。实拍草虽然缺素材，仍如实写captured，不换程序；候选检查由后续程序负责。
 示例输入：湿地，1组程序碎石、5丛程序芦苇，种子17，水位0，4×4展示范围。
 示例输出：{"biome":"wetland","unit":"display-unit","groundOrigin":"captured","rockOrigin":"procedural","plantOrigin":"procedural","rockCount":1,"plantKind":"reed","plantCount":5,"seed":17,"waterLevel":0,"clarification":""}
@@ -24,6 +24,7 @@ const systems: Record<AssetStage, string> = {
 };
 export function createAssetTransport(
   fetcher: typeof fetch = fetch,
+  requirementsSystem: string = systems.requirements,
 ): AssetTransport {
   return async (stage, payload, schema, signal) => {
     const response = await fetcher(
@@ -39,7 +40,7 @@ export function createAssetTransport(
           temperature: 0,
           max_tokens: 1024,
           messages: [
-            { role: "system", content: systems[stage] },
+            { role: "system", content: stage === "requirements" ? requirementsSystem : systems[stage] },
             { role: "user", content: JSON.stringify(payload) },
           ],
           response_format: {

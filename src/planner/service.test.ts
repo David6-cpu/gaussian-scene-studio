@@ -15,6 +15,26 @@ const reply = (text = raw) => ({
   done: true,
   doneReason: "stop",
 });
+it("riverbank missing-water reply is repaired once and preserves the original raw", async () => {
+  const first = JSON.stringify({ ...proposalFromRecipe(defaultRecipe), waterLevel: null });
+  let calls = 0;
+  const result = await planScene("河岸上放一些低矮草丛和石头", async request => {
+    calls++;
+    if (calls === 1) return reply(first);
+    expect(request.repair?.raw).toBe(first);
+    expect(request.repair?.error).toMatch(/水/);
+    return reply();
+  }, new AbortController().signal);
+  expect(result.repaired).toBe(true);
+  expect(result.attempts).toHaveLength(2);
+  expect(result.attempts[0].raw).toBe(first);
+  expect(result.proposal.waterLevel).toBe(0);
+});
+it("ambiguous water intent stops planning before calling the model", async () => {
+  let calls = 0;
+  await expect(planScene("不是不要水", async () => { calls++; return reply(); }, new AbortController().signal)).rejects.toThrow(/澄清/);
+  expect(calls).toBe(0);
+});
 describe("bounded planning orchestration", () => {
   it("records the explicit llama.cpp route for success and unavailable fallback", async () => {
     const signal = new AbortController().signal;

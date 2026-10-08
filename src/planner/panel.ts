@@ -29,7 +29,9 @@ import {
   type PlanRecord,
 } from "./history";
 
+import type {CatalogContext} from "../assets/catalog/context";
 type Binding = {
+  catalogContext?: CatalogContext;
   getRecipe: () => F0Recipe;
   getSurface: () => F0Recipe["algorithmVersion"];
   beforeApply?: () => void;
@@ -77,7 +79,7 @@ export function mountPlanner(host: HTMLElement, binding: Binding) {
   const node = <T extends HTMLElement = HTMLElement>(id: string) =>
     host.querySelector<T>(`#${id}`)!;
   const button = (id: string) => node<HTMLButtonElement>(id);
-  const catalog = mountCatalogPanel(node("catalog-host"), binding.getSurface);
+  const catalog = mountCatalogPanel(node("catalog-host"), binding.getSurface,binding.catalogContext);
   const editor = node<HTMLTextAreaElement>("plan-proposal"),
     prompt = node<HTMLTextAreaElement>("plan-prompt"),
     backendSelect = node<HTMLSelectElement>("plan-backend"),

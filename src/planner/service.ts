@@ -2,6 +2,7 @@ import { parseProposal, proposalFromRecipe, type Proposal } from "./contract";
 import { defaultRecipe } from "../recipe";
 import { terrainIntent, assertTerrainIntent } from "./terrain-intent";
 import { assertWetlandScope } from "./scope";
+import { waterIntent, assertWaterIntent } from "./water-intent";
 export const MODEL = "qwen2.5:7b-instruct-q4_K_M";
 export const LLAMA_MODEL = "qwen2.5-7b-instruct-q4_k_m";
 export const LLAMA_SMALL_MODEL = "qwen2.5-3b-instruct-q4_k_m";
@@ -117,6 +118,8 @@ export async function planScene(
   signal.throwIfAborted();
   assertWetlandScope(prompt);
   const intent = terrainIntent(prompt);
+  const water = waterIntent(prompt);
+  if (water.mode === "clarify") throw Error(water.message);
   const start = performance.now(),
     attempts: Attempt[] = [];
   let repair: Parameters<Transport>[0]["repair"];
@@ -152,6 +155,7 @@ export async function planScene(
         throw Error("服务报告的模型标识与预期不符");
       const proposal = parseProposal(JSON.parse(reply.raw));
       assertTerrainIntent(intent, proposal);
+      assertWaterIntent(water, proposal.waterLevel);
       return {
         prompt,
         proposal,

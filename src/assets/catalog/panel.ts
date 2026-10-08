@@ -1,5 +1,6 @@
 import type { F0Recipe } from "../../gaussian/types";
 import { assetCatalog } from "./entries";
+import {BUILTIN_CONTEXT,type CatalogContext} from "./context";
 import { wetlandBinding } from "./wetland";
 import {
   biomeLabels,
@@ -11,6 +12,7 @@ import {
 export function mountCatalogPanel(
   host: HTMLElement,
   getVersion: () => F0Recipe["algorithmVersion"],
+  context:CatalogContext=BUILTIN_CONTEXT,
 ) {
   host.innerHTML = `<details id="catalog-details" class="planner-details">
     <summary>资源库与选材依据</summary>
@@ -42,7 +44,7 @@ export function mountCatalogPanel(
           },
         ],
       });
-      const result = queryAssets(request);
+      const result = queryAssets(request,context.entries);
       const candidates = result.candidates[0].assets;
       node("catalog-message").textContent = result.missing.length
         ? `缺失：${result.missing.map((m) => m.message).join(" ")}`

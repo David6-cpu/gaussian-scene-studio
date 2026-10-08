@@ -1,7 +1,8 @@
 import { record, integer, finite, oneOf } from "../data-validation";
-import type { F0Recipe } from "../gaussian/types";
+import type { F0Recipe, SceneRecipe } from "../gaussian/types";
 import { parseRecipe, riversideRecipe } from "../recipe";
-import { assetCatalog } from "../assets/catalog/entries";
+import { BUILTIN_CONTEXT, type CatalogContext } from "../assets/catalog/context";
+import { parsePreparedRecipe, buildPreparedScene } from "../prepared-scene";
 import {
   identifier,
   text,
@@ -53,8 +54,21 @@ export const defaultAssetRequest: AssetRequest = freeze({
   clarification: "",
 });
 const keys = Object.keys(defaultAssetRequest);
+export type AssetMaterials = Omit<AssetRequest, "waterLevel">;
+export const materialKeys = keys.filter((key) => key !== "waterLevel");
 export function parseAssetRequest(value: unknown): AssetRequest {
   const r = record(value, keys);
+  const { clarification, ...materials } = parseAssetMaterials(
+    Object.fromEntries(materialKeys.map((key) => [key, r[key]])),
+  );
+  return freeze({
+    ...materials,
+    waterLevel: r.waterLevel === null ? null : finite(r.waterLevel, -0.5, 0.5),
+    clarification,
+  });
+}
+export function parseAssetMaterials(value: unknown): AssetMaterials {
+  const r = record(value, materialKeys);
   const rockCount = integer(r.rockCount, 0, 20),
     plantCount = integer(r.plantCount, 0, 20),
     plantKind = oneOf(r.plantKind, ["grass", "reed", "none"] as const);
@@ -76,7 +90,6 @@ export function parseAssetRequest(value: unknown): AssetRequest {
     plantKind,
     plantCount,
     seed: integer(r.seed, 0, 4294967295),
-    waterLevel: r.waterLevel === null ? null : finite(r.waterLevel, -0.5, 0.5),
     clarification: r.clarification.trim(),
   });
 }
@@ -133,8 +146,8 @@ export function requirementsFor(input: AssetRequest): SceneRequirements {
     ],
   };
 }
-export function candidateSnapshot(input: AssetRequest): CandidateSlot[] {
-  const q = queryAssets(requirementsFor(input));
+export function candidateSnapshot(input: AssetRequest, context: CatalogContext = BUILTIN_CONTEXT): CandidateSlot[] {
+  const q = queryAssets(requirementsFor(input), context.entries);
   if (q.missing.length)
     throw Error(`必要资源缺失：${q.missing.map((m) => m.message).join(" ")}`);
   return q.candidates.map((c) => ({
@@ -143,20 +156,20 @@ export function candidateSnapshot(input: AssetRequest): CandidateSlot[] {
     assetIds: c.assets.map((a) => a.id),
   }));
 }
-export function proceduralIds(choices: readonly Choice[]): string[] {
+export function proceduralIds(choices: readonly Choice[], context: CatalogContext = BUILTIN_CONTEXT): string[] {
   return [
     ...new Set(
       choices
         .filter(
           (c) =>
-            assetCatalog.find((a) => a.id === c.assetId)?.origin ===
+            context.entries.find((a) => a.id === c.assetId)?.origin ===
             "procedural",
         )
         .map((c) => c.assetId),
     ),
   ].sort();
 }
-export function checkChoices(input: AssetRequest, value: unknown): Choice[] {
+export function checkChoices(input: AssetRequest, value: unknown, context: CatalogContext = BUILTIN_CONTEXT): Choice[] {
   const r = record(value, ["choices"]);
   if (!Array.isArray(r.choices) || r.choices.length < 1 || r.choices.length > 3)
     throw Error("选材须覆盖1–3个实际角色");
@@ -164,29 +177,32 @@ export function checkChoices(input: AssetRequest, value: unknown): Choice[] {
     const c = record(v, ["key", "assetId"]);
     return { key: identifier(c.key), assetId: identifier(c.assetId) };
   });
-  candidateSnapshot(input);
+  candidateSnapshot(input, context);
   // Read-only inspection of the candidate contract. This does not authorize application.
   const inspected = validateAssetSelection(
     requirementsFor(input),
     choices,
-    assetCatalog,
-    { confirmedProceduralIds: proceduralIds(choices) },
+    context.entries,
+    { confirmedProceduralIds: proceduralIds(choices, context) },
   );
   return inspected.selected.map((s) => ({ key: s.key, assetId: s.asset.id }));
 }
+export function compileSelection(input:AssetRequest,value:unknown,confirmedProceduralIds:readonly string[]):F0Recipe;
+export function compileSelection(input:AssetRequest,value:unknown,confirmedProceduralIds:readonly string[],context:CatalogContext):SceneRecipe;
 export function compileSelection(
   input: AssetRequest,
   value: unknown,
   confirmedProceduralIds: readonly string[],
-): F0Recipe {
+  context: CatalogContext = BUILTIN_CONTEXT,
+): SceneRecipe {
   const r = parseAssetRequest(input),
-    choices = checkChoices(r, value);
-  validateAssetSelection(requirementsFor(r), choices, assetCatalog, {
+    choices = checkChoices(r, value, context);
+  validateAssetSelection(requirementsFor(r), choices, context.entries, {
     confirmedProceduralIds,
   });
   const byKey = new Map(choices.map((c) => [c.key, c.assetId]));
   if (
-    byKey.get("ground") !== "riverside-ground-v1" ||
+    (byKey.get("ground") !== "riverside-ground-v1" && byKey.get("ground") !== context.prepared?.metadata.id) ||
     (r.rockCount > 0 && byKey.get("rocks") !== "river-rock-v1")
   )
     throw Error("角色资源尚无已验证的湿地编译绑定");
@@ -196,6 +212,11 @@ export function compileSelection(
     plant !== (r.plantKind === "reed" ? "river-reed-v1" : "river-low-grass-v2")
   )
     throw Error("植物ID与实际生成角色不符");
+  if (context.prepared && byKey.get("ground") === context.prepared.metadata.id) {
+    const d=context.prepared;
+    const recipe=parsePreparedRecipe({...riversideRecipe,schemaVersion:2,algorithmVersion:"f0-prepared-ground-v1",ground:{id:d.metadata.id,contentVersion:d.metadata.contentVersion},plantKind:r.plantKind==="reed"?"reed":"low-grass",seed:r.seed,waterLevel:r.waterLevel,requested:{rock:r.rockCount,reed:r.plantCount}});
+    buildPreparedScene(recipe,d);return recipe;
+  }
   const recipe = parseRecipe({
     ...riversideRecipe,
     algorithmVersion:

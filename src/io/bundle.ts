@@ -9,7 +9,7 @@ import type {
   RiversideGround,
 } from "../gaussian/types";
 import { record, finite, integer, oneOf, vector } from "../data-validation";
-import { parseRecipe, isRiverside, isRiverProps } from "../recipe";
+import { parseRecipe, isRiverside, isRiverProps, isRiverbank, riverPlantKind } from "../recipe";
 import { buildScene } from "../build";
 import { riversideData } from "../terrain/riverside-data";
 import { RIVERSIDE_BYTES, assertRiversideGround } from "../terrain/riverside";
@@ -33,7 +33,7 @@ const allowedName = /^[a-z0-9-]+\.(gsbin|f32|u32)$/;
 // Each supported F0 recipe version is deterministic, not an arbitrary scene editor.
 // Keep decoded bytes; compare to the recipe's output rather than silently replacing them.
 // 1e-6 absolute tolerance permits insignificant cross-engine numeric rounding.
-function assertCanonical(
+export function assertCanonical(
   actual: unknown,
   expected: unknown,
   path: string,
@@ -69,7 +69,7 @@ function assertCanonical(
       );
   } else if (actual !== expected) fail();
 }
-function toBytes(data: Float32Array) {
+export function toBytes(data: Float32Array) {
   const bytes = new Uint8Array(data.length * 4),
     view = new DataView(bytes.buffer);
   data.forEach((x, i) => view.setFloat32(i * 4, x, true));
@@ -81,6 +81,7 @@ export async function encodeBundle(
   const files = new Map<string, Uint8Array>();
   const ground = result.scene.ground;
   if (ground) {
+    if ("kind" in ground) throw Error("Prepared ground requires scene ZIP v3");
     assertRiversideGround(ground);
     if (!ground.arrays) throw new Error("Riverside素材尚未载入，无法保存");
     await validateRiversideArrays(ground.arrays);
@@ -97,7 +98,7 @@ export async function encodeBundle(
     assets: result.scene.assets.map((a) => ({
       ...a,
       origin:
-        result.recipe.algorithmVersion === "f0-riverside-grass-v2" &&
+        riverPlantKind(result.recipe.algorithmVersion) === "low-grass" &&
         a.id === "reed"
           ? "procedural-low-grass-v2"
           : isRiverProps(result.recipe.algorithmVersion)
@@ -299,7 +300,7 @@ export async function decodeBundle(
     assetIds.add(id);
     oneOf(a.synthetic, [true]);
     oneOf(a.origin, [
-      recipe.algorithmVersion === "f0-riverside-grass-v2" && id === "reed"
+      riverPlantKind(recipe.algorithmVersion) === "low-grass" && id === "reed"
         ? "procedural-low-grass-v2"
         : isRiverProps(recipe.algorithmVersion)
           ? "procedural-river-props-v1"
@@ -374,7 +375,7 @@ export async function decodeBundle(
           scene.terrain.count > maxSurfaceSamples) ||
     (recipe.waterLevel === null) !== (scene.water === null) ||
     (scene.water &&
-      scene.water.count > (riverside ? nx * nz : scene.terrain.count))
+      scene.water.count > (isRiverbank(recipe.algorithmVersion) ? 81 * 81 : riverside ? nx * nz : scene.terrain.count))
   )
     throw new Error("地表与配方不匹配");
   const report = record(m.report, [

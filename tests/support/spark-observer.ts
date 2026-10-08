@@ -1,5 +1,10 @@
 // Browser-test observations only; never included in the application entry points.
-import { SparkRenderer } from "@sparkjsdev/spark";
+import {
+  SparkRenderer,
+  ExtSplats,
+  SplatMesh,
+  PackedSplats,
+} from "@sparkjsdev/spark";
 
 let spark: SparkRenderer | undefined;
 let disposals = 0;
@@ -15,10 +20,85 @@ SparkRenderer.prototype.dispose = function () {
   return dispose.call(this);
 };
 
+type Kind = "packed" | "ext" | "mesh";
+const live = {
+  packed: new Set<object>(),
+  ext: new Set<object>(),
+  mesh: new Set<object>(),
+};
+let injection:
+  { kind: Kind; mode: "fail" | "pause"; target?: object } | undefined;
+let releaseInitialization: ((error?: string) => void) | undefined;
+let held = false;
+for (const [kind, Class] of [
+  ["packed", PackedSplats],
+  ["ext", ExtSplats],
+  ["mesh", SplatMesh],
+] as const) {
+  const values = new WeakMap<object, Promise<unknown>>();
+  Object.defineProperty(Class.prototype, "initialized", {
+    configurable: true,
+    get() {
+      return values.get(this);
+    },
+    set(value: Promise<unknown>) {
+      live[kind].add(this);
+      let next = value;
+      if (injection?.kind === kind) {
+        injection.target ??= this;
+        if (injection.target === this) {
+          if (injection.mode === "fail")
+            next = Promise.resolve(value).then(() => {
+              throw Error("injected " + kind + " initialization failure");
+            });
+          else {
+            held = true;
+            let release!: (error?: string) => void;
+            const gate = new Promise<void>((resolve, reject) => {
+              release = (error) => error ? reject(Error(error)) : resolve();
+            });
+            const prior = releaseInitialization;
+            releaseInitialization = (error) => {
+              prior?.(error);
+              release(error);
+            };
+            next = Promise.resolve(value).then(() => gate);
+          }
+        }
+      }
+      next.catch(() => {});
+      values.set(this, next);
+    },
+  });
+  const dispose = Class.prototype.dispose;
+  Class.prototype.dispose = function () {
+    live[kind].delete(this);
+    return dispose.call(this);
+  };
+}
 export const sparkProbe = {
+  failInitialization(kind: Kind) {
+    injection = { kind, mode: "fail" };
+  },
+  pauseInitialization(kind: Kind) {
+    held = false;
+    injection = { kind, mode: "pause" };
+  },
+  resumeInitialization(error?: string) {
+    injection = undefined;
+    releaseInitialization?.(error);
+    releaseInitialization = undefined;
+    held = false;
+  },
   snapshot() {
     return {
       sorting: spark?.sorting,
+      initializationHeld: held,
+      live: {
+        packed: live.packed.size,
+        ext: live.ext.size,
+        mesh: live.mesh.size,
+      },
       disposals,
       textures: spark?.renderer.info.memory.textures,
       programReferences: spark?.renderer.info.programs?.reduce(

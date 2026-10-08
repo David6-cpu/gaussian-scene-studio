@@ -1,4 +1,10 @@
-import { record, finite, integer, oneOf, vector } from "../../data-validation";
+import {
+  record,
+  finite,
+  integer,
+  oneOf,
+  vector,
+} from "../../data-validation.ts";
 
 export const categories = [
   "ground",
@@ -10,6 +16,7 @@ export const categories = [
 export const biomes = ["wetland", "snow-mountain"] as const;
 export const loaders = [
   "riverside-ground-v1",
+  "prepared-sh3-ground-v1",
   "river-rock-v1",
   "river-low-grass-v2",
   "river-grass-v1",
@@ -218,8 +225,10 @@ export function parseAssetMetadata(value: unknown): AssetMetadata {
   const category = oneOf(a.category, categories),
     loader = oneOf(a.loader, loaders);
   if (
-    (origin === "captured") !== (loader === "riverside-ground-v1") ||
-    (category === "ground") !== (loader === "riverside-ground-v1")
+    (origin === "captured") !==
+      ["riverside-ground-v1", "prepared-sh3-ground-v1"].includes(loader) ||
+    (category === "ground") !==
+      ["riverside-ground-v1", "prepared-sh3-ground-v1"].includes(loader)
   )
     throw Error("当前加载器不支持此来源/类别");
   const radius =

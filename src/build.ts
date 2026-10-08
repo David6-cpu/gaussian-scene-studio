@@ -1,5 +1,6 @@
 import type { F0Recipe, BuildResult } from "./gaussian/types";
-import { parseRecipe, isRiverside } from "./recipe";
+import { parseRecipe, isRiverside, isRiverbank, riverPlantKind } from "./recipe";
+import { sampleRiverbankWater, riverbankSurface } from "./terrain/riverbank-water";
 import { makeHeightField } from "./terrain/heightfield";
 import { sampleTerrain } from "./terrain/sampling";
 import { makeCatalogAssets, makeCatalogGround } from "./assets/catalog/wetland";
@@ -19,11 +20,13 @@ export function buildScene(input: F0Recipe): BuildResult {
     riverside = isRiverside(recipe.algorithmVersion),
     heightfield = riverside ? riversideHeightField() : makeHeightField(recipe),
     t1 = performance.now();
-  const terrain = sampleTerrain(heightfield, recipe),
+  const riverWater = isRiverbank(recipe.algorithmVersion)
+      ? sampleRiverbankWater(heightfield, { ...recipe, algorithmVersion: recipe.algorithmVersion }) : null,
+    terrain = riverWater ? { terrain: { count: 0, data: new Float32Array() }, water: riverWater.buffer } : sampleTerrain(heightfield, recipe),
     t2 = performance.now(),
     assets = makeCatalogAssets(recipe),
     t3 = performance.now();
-  const placed = placeAssets(heightfield, recipe, assets),
+  const placed = placeAssets(heightfield, recipe, assets, riverWater ? riverbankSurface(riverWater, riverPlantKind(recipe.algorithmVersion) === "reed") : undefined),
     t4 = performance.now(),
     scene = {
       ...terrain,

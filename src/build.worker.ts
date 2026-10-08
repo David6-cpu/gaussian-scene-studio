@@ -1,9 +1,11 @@
 import { buildScene } from "./build";
 import { sourceBuffers } from "./gaussian/validate";
-self.onmessage = ({ data }) => {
+import {parsePreparedDefinition} from "./io/prepared-ground";
+import {buildPreparedScene} from "./prepared-scene";
+self.onmessage = async ({ data }) => {
   const requestId = data.requestId;
   try {
-    const result = buildScene(data.recipe),
+    const result = data.recipe?.schemaVersion === 2 ? buildPreparedScene(data.recipe, await parsePreparedDefinition(data.definition)) : buildScene(data.recipe),
       buffers = [
         ...new Set([
           ...sourceBuffers(result.scene).map((b) => b.data.buffer),

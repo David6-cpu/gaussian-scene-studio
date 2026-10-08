@@ -40,6 +40,12 @@ const bindings: Readonly<Record<F0Recipe["algorithmVersion"], Binding>> =
       rock: "river-rock-v1",
       reed: "river-reed-v1",
     },
+    "f0-riverbank-grass-v1": {
+      ground: "riverside-ground-v1", rock: "river-rock-v1", reed: "river-low-grass-v2",
+    },
+    "f0-riverbank-reed-v1": {
+      ground: "riverside-ground-v1", rock: "river-rock-v1", reed: "river-reed-v1",
+    },
   });
 export function wetlandBinding(version: F0Recipe["algorithmVersion"]): Binding {
   if (!Object.hasOwn(bindings, version))

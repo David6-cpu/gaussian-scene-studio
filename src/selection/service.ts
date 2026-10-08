@@ -1,6 +1,7 @@
 import { record, finite } from "../data-validation";
 import { text } from "../assets/catalog/metadata";
-import { assetCatalog, ASSET_CATALOG_VERSION } from "../assets/catalog/entries";
+import { BUILTIN_CONTEXT, type CatalogContext } from "../assets/catalog/context";
+import { waterIntent, assertWaterIntent } from "../planner/water-intent";
 import {
   LLAMA_SMALL_MODEL,
   parsePrompt,
@@ -68,7 +69,7 @@ export function parseRequirementEvidence(value: unknown): RequirementEvidence {
     elapsedMs: finite(e.elapsedMs, 0, 3600000),
   };
 }
-export function parseChoiceEvidence(value: unknown): ChoiceEvidence {
+export function parseChoiceEvidence(value: unknown, context:CatalogContext=BUILTIN_CONTEXT): ChoiceEvidence {
   const e = record(value, [
     "request",
     "catalogVersion",
@@ -80,17 +81,17 @@ export function parseChoiceEvidence(value: unknown): ChoiceEvidence {
   ]);
   const request = parseAssetRequest(e.request),
     raw = rawText(e.raw),
-    choices = checkChoices(request, JSON.parse(raw)),
-    candidates = candidateSnapshot(request);
+    choices = checkChoices(request, JSON.parse(raw),context),
+    candidates = candidateSnapshot(request,context);
   if (
-    e.catalogVersion !== ASSET_CATALOG_VERSION ||
+    e.catalogVersion !== context.catalogVersion ||
     !equal(candidates, e.candidates) ||
     !equal(choices, e.choices)
   )
     throw Error("候选版本、快照或选材结果与原文不一致");
   return {
     request,
-    catalogVersion: ASSET_CATALOG_VERSION,
+    catalogVersion: context.catalogVersion,
     candidates,
     choices,
     model: model(e.model),
@@ -98,7 +99,7 @@ export function parseChoiceEvidence(value: unknown): ChoiceEvidence {
     elapsedMs: finite(e.elapsedMs, 0, 3600000),
   };
 }
-async function requestOnce(
+export async function requestOnce(
   stage: AssetStage,
   payload: unknown,
   schema: Record<string, unknown>,
@@ -146,6 +147,8 @@ export async function interpretRequest(
 ): Promise<RequirementEvidence> {
   const prompt = parsePrompt(value);
   assertAssetPrompt(prompt);
+  const water = waterIntent(prompt);
+  if (water.mode === "clarify") throw Error(water.message);
   // A live-input clarification gate only: never infer an affirmative source
   // from these uncertain phrases, and never reclassify archived evidence.
   if (
@@ -163,19 +166,22 @@ export async function interpretRequest(
     transport,
     signal,
   );
-  return parseRequirementEvidence({
+  const evidence = parseRequirementEvidence({
     prompt,
     request: parseAssetRequest(JSON.parse(reply.raw)),
     ...reply,
   });
+  assertWaterIntent(water, evidence.request.waterLevel);
+  return evidence;
 }
 export async function selectAssets(
   input: AssetRequest,
   transport: AssetTransport,
   signal: AbortSignal,
+  context: CatalogContext = BUILTIN_CONTEXT,
 ): Promise<ChoiceEvidence> {
   const request = parseAssetRequest(input),
-    candidates = candidateSnapshot(request);
+    candidates = candidateSnapshot(request,context);
   const schema = {
     type: "object",
     additionalProperties: false,
@@ -205,7 +211,7 @@ export async function selectAssets(
     candidates: candidates.map((c) => ({
       ...c,
       assets: c.assetIds.map((id) => {
-        const a = assetCatalog.find((a) => a.id === id)!;
+        const a = context.entries.find((a) => a.id === id)!;
         return {
           id: a.id,
           title: a.title,
@@ -220,9 +226,9 @@ export async function selectAssets(
   const reply = await requestOnce("choose", payload, schema, transport, signal);
   return parseChoiceEvidence({
     request,
-    catalogVersion: ASSET_CATALOG_VERSION,
+    catalogVersion: context.catalogVersion,
     candidates,
-    choices: checkChoices(request, JSON.parse(reply.raw)),
+    choices: checkChoices(request, JSON.parse(reply.raw), context),
     ...reply,
-  });
+  }, context);
 }

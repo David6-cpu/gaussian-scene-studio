@@ -13,12 +13,17 @@ import type {
   Vec3,
   AssetPrototype,
   Instance,
-  RiversideGround,
+  SceneSwap,
 } from "./types";
 import {
   loadRiversideArrays,
   validateRiversideArrays,
 } from "../assets/riverside";
+import {
+  parsePreparedDefinition,
+  validatePreparedArrays,
+  type PreparedGroundAsset,
+} from "../io/prepared-ground";
 import { RIVERSIDE_BYTES } from "../terrain/riverside";
 import {
   assertGaussianBuffer,
@@ -32,7 +37,7 @@ import {
 } from "./spark-lifecycle";
 type Entry = {
   mesh: SplatMesh;
-  buffer: GaussianBuffer | RiversideGround;
+  buffer: GaussianBuffer | NonNullable<BuiltScene["ground"]>;
   assetId?: string;
   lod?: Instance["lod"];
 };
@@ -61,6 +66,12 @@ function release(
 }
 export async function createGaussianView(
   canvas: HTMLCanvasElement,
+  options: {
+    loadPreparedGround?: (
+      ref: { id: string; contentVersion: string },
+      signal: AbortSignal,
+    ) => Promise<PreparedGroundAsset>;
+  } = {},
 ): Promise<GaussianView> {
   const previous = pendingDisposals.get(canvas);
   if (previous) {
@@ -90,7 +101,9 @@ export async function createGaussianView(
   let bank = new Map<GaussianBuffer, PackedSplats>(),
     meshes = new Map<string, Entry>(),
     prototypes = new Map<string, AssetPrototype>();
-  let ground: { descriptor: RiversideGround; source: ExtSplats } | undefined;
+  let ground:
+    | { descriptor: NonNullable<BuiltScene["ground"]>; source: ExtSplats }
+    | undefined;
   let sourceLoad: AbortController | undefined;
   let lodEnabled = false,
     viewportHeight = 720,
@@ -112,14 +125,29 @@ export async function createGaussianView(
           : null
       : null,
   };
-  const extents = new Map<string, number>();
+  let extents = new Map<string, number>();
+  let pending: SceneSwap | undefined;
   return {
-    async setScene(input: BuiltScene) {
+    async setScene(this: GaussianView, input: BuiltScene) {
+      try {
+        const swap = await this.prepareScene(input);
+        swap.activate();
+        swap.commit();
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === "AbortError")) throw e;
+      }
+    },
+    async prepareScene(input: BuiltScene): Promise<SceneSwap> {
       if (disposed) throw new Error("Renderer disposed");
+      pending?.rollback();
       const ticket = ++generation;
       sourceLoad?.abort();
       const load = new AbortController();
       sourceLoad = load;
+      const current = () => {
+        if (ticket !== generation || disposed || load.signal.aborted)
+          throw new DOMException("Scene superseded", "AbortError");
+      };
       assertSceneBudget(input);
       for (const b of sourceBuffers(input)) assertGaussianBuffer(b);
       const nextBank = new Map<GaussianBuffer, PackedSplats>(),
@@ -134,10 +162,7 @@ export async function createGaussianView(
           const packed = new PackedSplats({ maxSplats: b.count });
           nextBank.set(b, packed);
           await packed.initialized;
-          if (ticket !== generation || disposed) {
-            release(nextMeshes, nextBank);
-            return;
-          }
+          current();
           for (let i = 0; i < b.data.length; i += 14) {
             const d = b.data;
             p.fromArray(d, i);
@@ -170,13 +195,36 @@ export async function createGaussianView(
         };
         if (input.ground) {
           const descriptor = input.ground;
-          const arrays =
-            descriptor.arrays ?? (await loadRiversideArrays(load.signal));
-          await validateRiversideArrays(arrays);
-          if (ticket !== generation || disposed) {
-            release(nextMeshes, nextBank);
-            return;
+          let arrays = descriptor.arrays;
+          if ("kind" in descriptor) {
+            const d = await parsePreparedDefinition(descriptor.definition);
+            current();
+            if (!arrays) {
+              if (!options.loadPreparedGround)
+                throw Error("Missing prepared ground resolver");
+              const asset = await options.loadPreparedGround(
+                {
+                  id: d.metadata.id,
+                  contentVersion: d.metadata.contentVersion,
+                },
+                load.signal,
+              );
+              current();
+              const supplied = await parsePreparedDefinition(asset.definition);
+              current();
+              if (
+                supplied.metadata.id !== d.metadata.id ||
+                supplied.metadata.contentVersion !== d.metadata.contentVersion
+              )
+                throw Error("Prepared resolver identity mismatch");
+              arrays = asset.arrays;
+            }
+            await validatePreparedArrays(d, arrays);
+          } else {
+            arrays ??= await loadRiversideArrays(load.signal);
+            await validateRiversideArrays(arrays);
           }
+          current();
           descriptor.arrays = arrays;
           const source = new ExtSplats({
             numSplats: descriptor.count,
@@ -190,6 +238,7 @@ export async function createGaussianView(
           });
           nextGround = { descriptor, source };
           await source.initialized;
+          current();
           if (source.getNumSh() !== 3)
             throw new Error("Riverside SH3载入不完整");
           const mesh = new SplatMesh({
@@ -200,6 +249,7 @@ export async function createGaussianView(
           });
           nextMeshes.set("$ground", { mesh, buffer: descriptor });
           await mesh.initialized;
+          current();
           mesh.position.fromArray(descriptor.position);
           mesh.quaternion.fromArray(descriptor.rotation);
           mesh.scale.setScalar(descriptor.scale);
@@ -210,16 +260,12 @@ export async function createGaussianView(
           const a = input.assets.find((a) => a.id === i.assetId)!;
           add(i.id, a.lods[i.lod], i);
         }
-        if (ticket !== generation || disposed) {
-          release(nextMeshes, nextBank, nextGround?.source);
-          return;
-        }
-        release(meshes, bank, ground?.source);
-        ground = nextGround;
-        bank = nextBank;
-        meshes = nextMeshes;
-        prototypes = new Map(input.assets.map((a) => [a.id, a]));
-        extents.clear();
+        await Promise.all(
+          [...nextMeshes.values()].map((e) => e.mesh.initialized),
+        );
+        current();
+        const nextPrototypes = new Map(input.assets.map((a) => [a.id, a])),
+          nextExtents = new Map<string, number>();
         for (const a of input.assets) {
           let extent = 0;
           const d = a.lods.full.data;
@@ -229,15 +275,77 @@ export async function createGaussianView(
               Math.hypot(d[i], d[i + 1], d[i + 2]) +
                 3 * Math.max(d[i + 3], d[i + 4], d[i + 5]),
             );
-          extents.set(a.id, extent);
+          nextExtents.set(a.id, extent);
         }
-        for (const e of meshes.values()) scene.add(e.mesh);
+        const old = {
+          meshes,
+          bank,
+          ground,
+          prototypes,
+          extents,
+          lodEnabled,
+          guard,
+          camera: camera.position.clone(),
+          target: controls.target.clone(),
+          interactive: controls.enabled,
+        };
+        let active = false,
+          closed = false;
+        const swap: SceneSwap = {
+          activate() {
+            current();
+            if (closed)
+              throw new DOMException("Scene swap closed", "AbortError");
+            if (active) return;
+            for (const e of old.meshes.values()) e.mesh.removeFromParent();
+            meshes = nextMeshes;
+            bank = nextBank;
+            ground = nextGround;
+            prototypes = nextPrototypes;
+            extents = nextExtents;
+            for (const e of meshes.values()) scene.add(e.mesh);
+            active = true;
+          },
+          commit() {
+            current();
+            if (closed || !active || pending !== swap || gl.isContextLost())
+              throw Error("Scene swap cannot commit");
+            closed = true;
+            pending = undefined;
+            release(old.meshes, old.bank, old.ground?.source);
+          },
+          rollback() {
+            if (closed) return;
+            closed = true;
+            if (active && pending === swap) {
+              for (const e of nextMeshes.values()) e.mesh.removeFromParent();
+              meshes = old.meshes;
+              bank = old.bank;
+              ground = old.ground;
+              prototypes = old.prototypes;
+              extents = old.extents;
+              lodEnabled = old.lodEnabled;
+              guard = old.guard;
+              camera.position.copy(old.camera);
+              controls.target.copy(old.target);
+              camera.lookAt(controls.target);
+              camera.updateMatrixWorld();
+              controls.enabled = old.interactive;
+              for (const e of meshes.values()) scene.add(e.mesh);
+            }
+            if (pending === swap) pending = undefined;
+            release(nextMeshes, nextBank, nextGround?.source);
+          },
+        };
+        pending = swap;
+        return swap;
       } catch (e) {
         release(nextMeshes, nextBank, nextGround?.source);
         throw e;
       }
     },
     cancelPendingScene() {
+      pending?.rollback();
       generation++;
       sourceLoad?.abort();
     },
@@ -263,6 +371,7 @@ export async function createGaussianView(
         }
     },
     clearScene() {
+      pending?.rollback();
       generation++;
       sourceLoad?.abort();
       release(meshes, bank, ground?.source);
@@ -365,7 +474,12 @@ export async function createGaussianView(
             (s, [b, p]) =>
               s + b.data.byteLength + (p.packedArray?.byteLength ?? 0),
             0,
-          ) + (ground ? RIVERSIDE_BYTES : 0),
+          ) +
+          (ground
+            ? "kind" in ground.descriptor
+              ? ground.descriptor.definition.capacity * 96
+              : RIVERSIDE_BYTES
+            : 0),
         ...(ground
           ? {
               ground: {
@@ -379,6 +493,7 @@ export async function createGaussianView(
     },
     dispose() {
       if (disposed) return;
+      pending?.rollback();
       disposed = true;
       generation++;
       sourceLoad?.abort();

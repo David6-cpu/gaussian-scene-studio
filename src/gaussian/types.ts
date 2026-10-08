@@ -1,3 +1,4 @@
+import type { PreparedGroundDefinition } from "../io/prepared-ground";
 export type Vec3 = readonly [number, number, number];
 export type Quat = readonly [number, number, number, number];
 export interface GaussianBuffer {
@@ -44,9 +45,41 @@ export interface BuiltScene {
   water: GaussianBuffer | null;
   assets: AssetPrototype[];
   instances: Instance[];
-  ground?: RiversideGround;
+  ground?: RiversideGround | PreparedGround;
 }
+export interface PreparedGround {
+  kind: "prepared";
+  definition: PreparedGroundDefinition;
+  id: string;
+  count: number;
+  position: Vec3;
+  rotation: Quat;
+  scale: number;
+  arrays?: GroundArrays;
+}
+export type PreparedGroundRecipe = Omit<
+  F0Recipe,
+  "schemaVersion" | "algorithmVersion"
+> & {
+  schemaVersion: 2;
+  algorithmVersion: "f0-prepared-ground-v1";
+  ground: { id: string; contentVersion: string };
+  plantKind: "low-grass" | "reed";
+};
+export type SceneRecipe = F0Recipe | PreparedGroundRecipe;
+export interface PreparedBuildResult extends Omit<
+  BuildResult,
+  "recipe" | "report"
+> {
+  recipe: PreparedGroundRecipe;
+  report: Omit<BuildReport, "algorithmVersion"> & {
+    algorithmVersion: "f0-prepared-ground-v1";
+  };
+}
+export type SceneBuildResult = BuildResult | PreparedBuildResult;
 export type AssetCounts = { rock: number; reed: number };
+export type RiverbankVersion = "f0-riverbank-grass-v1" | "f0-riverbank-reed-v1";
+export type RiverbankRecipe = F0Recipe & { algorithmVersion: RiverbankVersion };
 export interface F0Recipe {
   schemaVersion: 1;
   algorithmVersion:
@@ -55,7 +88,8 @@ export interface F0Recipe {
     | "f0-riverside-v1"
     | "f0-riverside-grass-v1"
     | "f0-riverside-grass-v2"
-    | "f0-riverside-reed-v1";
+    | "f0-riverside-reed-v1"
+    | RiverbankVersion;
   recipeSource: "manual";
   seed: number;
   width: number;
@@ -101,7 +135,13 @@ export interface ViewStats {
   ownedBytes: number;
   ground?: { id: string; count: number; shBands: number };
 }
+export interface SceneSwap {
+  activate(): void;
+  commit(): void;
+  rollback(): void;
+}
 export interface GaussianView {
+  prepareScene(scene: BuiltScene): Promise<SceneSwap>;
   setScene(scene: BuiltScene): Promise<void>;
   cancelPendingScene(): void;
   clearScene(): void;

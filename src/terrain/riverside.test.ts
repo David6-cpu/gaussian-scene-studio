@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { buildScene } from "../build";
-import { defaultRecipe, parseRecipe } from "../recipe";
+import { defaultRecipe, parseRecipe, sceneAssetLabel } from "../recipe";
 import type { F0Recipe } from "../gaussian/types";
 import { countSplats } from "../gaussian/validate";
 import { sampleHeight } from "./heightfield";
@@ -16,6 +16,15 @@ export const trial: F0Recipe = {
   waterLevel: -0.025,
   requested: { rock: 2, reed: 6 },
 };
+test("new riverbank version has its own dense water while old riverbanks retain their water", () => {
+  const old = buildScene({ ...trial, requested: { rock: 10, reed: 10 }, waterLevel: 0 });
+  expect(old.scene.water!.count).toBe(1152);
+  const next = buildScene({ ...trial, algorithmVersion: "f0-riverbank-grass-v1", waterLevel: 0, requested: { rock: 0, reed: 4 } });
+  expect(next.scene.water!.count).toBeGreaterThan(1681);
+  expect(next.report.activeSplats).toBeLessThanOrEqual(250000);
+  expect(next.scene.ground).toEqual(old.scene.ground);
+  expect(sceneAssetLabel(next.recipe.algorithmVersion)).toContain("低矮细叶草丛");
+});
 
 test("Riverside uses one continuous SH3 ground with a surveyed proxy for water and placement", () => {
   const result = buildScene(trial);
