@@ -1,8 +1,32 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
+import { realpathSync } from "node:fs";
+import { resolve, relative, isAbsolute } from "node:path";
+import { loadLibrary } from "../general-scene/asset-library-server.ts";
+import {
+  createCatalogView,
+  makeAssetLibrary,
+  type AssetLibrary,
+} from "../general-scene/asset-library.ts";
+import {
+  planRequest,
+  parsePlanningRequest,
+  type PlanningRequest,
+} from "../general-scene/planner.ts";
+import {
+  abortable,
+  createGeneralTransport,
+  createTokenCounter,
+  type GeneralTransport,
+  type TokenCounter,
+} from "../general-scene/model-transport.ts";
 import { record } from "../data-validation";
 import { proposalSchema } from "./contract";
-import { interpretRequest, selectAssets, type AssetTransport } from "../selection/service";
+import {
+  interpretRequest,
+  selectAssets,
+  type AssetTransport,
+} from "../selection/service";
 import { parseAssetRequest } from "../selection/contract";
 import { createAssetTransport } from "../selection/transport";
 import { createReviewTransport } from "../review-v2/transport";
@@ -94,7 +118,10 @@ export function createOllamaTransport(
     };
   };
 }
-export function createLlamaTransport(fetcher: typeof fetch = fetch, selectedModel: unknown = LLAMA_MODEL): Transport {
+export function createLlamaTransport(
+  fetcher: typeof fetch = fetch,
+  selectedModel: unknown = LLAMA_MODEL,
+): Transport {
   const model = parseModel("llama.cpp", selectedModel);
   return async (request, signal) => {
     const data = await limitedJson(
@@ -142,7 +169,10 @@ export function createLlamaTransport(fetcher: typeof fetch = fetch, selectedMode
     };
   };
 }
-export async function readLlamaStatus(fetcher: typeof fetch = fetch, selectedModel: unknown = LLAMA_MODEL) {
+export async function readLlamaStatus(
+  fetcher: typeof fetch = fetch,
+  selectedModel: unknown = LLAMA_MODEL,
+) {
   const model = parseModel("llama.cpp", selectedModel);
   try {
     const data = await limitedJson(
@@ -212,19 +242,63 @@ function send(res: ServerResponse, status: number, body: unknown) {
   });
   res.end(JSON.stringify(body));
 }
-async function readBody(req: IncomingMessage) {
+async function readBody(req: IncomingMessage, maxBytes = 8192) {
   const chunks: Buffer[] = [];
   let size = 0;
   for await (const chunk of req.iterator({ destroyOnReturn: false })) {
     const b = Buffer.from(chunk);
     size += b.length;
-    if (size > 8192) {
+    if (size > maxBytes) {
       req.resume();
-      throw Error("请求超过8KiB");
+      throw Error(`请求超过${maxBytes === 8192 ? "8" : "64"}KiB`);
     }
     chunks.push(b);
   }
-  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  return JSON.parse(
+    maxBytes === 8192
+      ? Buffer.concat(chunks).toString("utf8")
+      : new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks)),
+  );
+}
+/** Server-owned startup configuration. A request can never supply or change this path. */
+export function createGeneralLibrarySource(
+  indexPath?: string,
+  projectRoot = process.cwd(),
+): (signal: AbortSignal) => Promise<AssetLibrary> {
+  if (!indexPath) {
+    const empty = createCatalogView([], []).then((view) =>
+      makeAssetLibrary(view, async () => {
+        throw Error("没有配置通用场景素材库");
+      }),
+    );
+    return (signal) => abortable(empty, signal);
+  }
+  const base = resolve(projectRoot, ".local"),
+    index = resolve(projectRoot, indexPath);
+  const contained = (root: string, target: string) => {
+    const child = relative(root, target);
+    return (
+      child !== "" &&
+      child !== ".." &&
+      !child.startsWith("../") &&
+      !isAbsolute(child)
+    );
+  };
+  const check = () => {
+    if (
+      !contained(base, index) ||
+      !contained(realpathSync(base), realpathSync(index))
+    )
+      throw Error("General catalog must be under project .local");
+  };
+  check();
+  return async (signal) => {
+    signal.throwIfAborted();
+    check();
+    const library = await abortable(loadLibrary(index), signal);
+    signal.throwIfAborted();
+    return library;
+  };
 }
 export function createPlannerMiddleware(
   deps: {
@@ -237,6 +311,9 @@ export function createPlannerMiddleware(
     assetTransport?: AssetTransport;
     reviewTransport?: AssetTransport;
     catalog?: LoadedCatalog;
+    generalLibrary?: (signal: AbortSignal) => Promise<AssetLibrary>;
+    generalTransport?: GeneralTransport;
+    generalCountTokens?: TokenCounter;
   } = {},
 ) {
   const transports = {
@@ -247,28 +324,44 @@ export function createPlannerMiddleware(
     ollama: deps.status ?? readOllamaStatus,
     "llama.cpp": deps.llamaStatus ?? readLlamaStatus,
   };
-  const smallTransport = deps.llamaSmallTransport ?? createLlamaTransport(fetch, LLAMA_SMALL_MODEL);
-  const smallStatus = deps.llamaSmallStatus ?? (() => readLlamaStatus(fetch, LLAMA_SMALL_MODEL));
+  const smallTransport =
+    deps.llamaSmallTransport ?? createLlamaTransport(fetch, LLAMA_SMALL_MODEL);
+  const smallStatus =
+    deps.llamaSmallStatus ?? (() => readLlamaStatus(fetch, LLAMA_SMALL_MODEL));
   const assetTransport = deps.assetTransport ?? createAssetTransport();
   const reviewTransport = deps.reviewTransport ?? createReviewTransport();
   const catalog = deps.catalog?.context ?? BUILTIN_CONTEXT;
-  const packageBytes = deps.catalog?.packageBytes ? new Uint8Array(deps.catalog.packageBytes) : null;
+  const packageBytes = deps.catalog?.packageBytes
+    ? new Uint8Array(deps.catalog.packageBytes)
+    : null;
   const assetRoutes = new Map<string, Uint8Array>();
   if (packageBytes && catalog.prepared) {
     const d = catalog.prepared;
     const bundle = unpackBundle(packageBytes);
-    assetRoutes.set(`/api/planner/assets/package/${d.metadata.id}/${d.metadata.contentVersion}`, packageBytes);
+    assetRoutes.set(
+      `/api/planner/assets/package/${d.metadata.id}/${d.metadata.contentVersion}`,
+      packageBytes,
+    );
     for (const [name, bytes] of bundle.files)
       assetRoutes.set(`/assets/local-ground/${d.metadata.id}/${name}`, bytes);
-    assetRoutes.set(`/assets/local-ground/${d.metadata.id}/LICENSE.txt`, new TextEncoder().encode(d.licenseText));
+    assetRoutes.set(
+      `/assets/local-ground/${d.metadata.id}/LICENSE.txt`,
+      new TextEncoder().encode(d.licenseText),
+    );
   }
+  const generalLibrary = deps.generalLibrary ?? createGeneralLibrarySource();
+  const generalTransport = deps.generalTransport ?? createGeneralTransport();
+  const generalCountTokens = deps.generalCountTokens ?? createTokenCounter();
   let busy = false;
   return async (
     req: IncomingMessage,
     res: ServerResponse,
     next: () => void,
   ) => {
-    if (!req.url?.startsWith("/api/planner/") && !req.url?.startsWith("/assets/local-ground/")) {
+    if (
+      !req.url?.startsWith("/api/planner/") &&
+      !req.url?.startsWith("/assets/local-ground/")
+    ) {
       next();
       return;
     }
@@ -282,13 +375,97 @@ export function createPlannerMiddleware(
       send(res, 403, { error: "仅允许同源本机访问" });
       return;
     }
-    if (req.url === "/api/planner/assets/catalog" || req.url.startsWith("/api/planner/assets/package/") || req.url.startsWith("/assets/local-ground/")) {
-      if (req.method !== "GET") { send(res, 405, {error:"只读素材接口"}); return; }
-      if (req.url === "/api/planner/assets/catalog") { send(res, 200, catalog); return; }
+    if (
+      req.url === "/api/planner/general/catalog" ||
+      req.url.startsWith("/api/planner/general/assets/")
+    ) {
+      if (req.method !== "GET") {
+        send(res, 405, { error: "只读素材接口" });
+        return;
+      }
+      const controller = new AbortController(),
+        disconnect = () => {
+          if (!res.writableEnded) controller.abort();
+        };
+      res.on("close", disconnect);
+      const timer = setTimeout(
+        () => controller.abort(Error("素材读取超时")),
+        120000,
+      );
+      try {
+        const library = await abortable(
+          generalLibrary(controller.signal),
+          controller.signal,
+        );
+        if (req.url === "/api/planner/general/catalog") {
+          send(res, 200, {
+            digest: library.digest,
+            manifests: library.manifests,
+            styles: library.styles,
+          });
+          return;
+        }
+        const match =
+          /^\/api\/planner\/general\/assets\/([^/]+)\/([^/]+)\/([^/]+)$/.exec(
+            req.url,
+          );
+        if (!match) throw Error("未知素材成员");
+        const [id, contentVersion, member] = match
+          .slice(1)
+          .map(decodeURIComponent);
+        const bytes = await abortable(
+          library.resolveMember(
+            { id, contentVersion },
+            member,
+            controller.signal,
+          ),
+          controller.signal,
+        );
+        if (!res.destroyed && !res.writableEnded) {
+          res.writeHead(200, {
+            "content-type": "application/octet-stream",
+            "content-length": bytes.byteLength,
+            "cache-control": "no-store",
+            "x-content-type-options": "nosniff",
+          });
+          res.end(bytes);
+        }
+      } catch (error) {
+        send(res, 404, { error: errorText(error) });
+      } finally {
+        clearTimeout(timer);
+        res.off("close", disconnect);
+      }
+      return;
+    }
+    if (
+      req.url === "/api/planner/assets/catalog" ||
+      req.url.startsWith("/api/planner/assets/package/") ||
+      req.url.startsWith("/assets/local-ground/")
+    ) {
+      if (req.method !== "GET") {
+        send(res, 405, { error: "只读素材接口" });
+        return;
+      }
+      if (req.url === "/api/planner/assets/catalog") {
+        send(res, 200, catalog);
+        return;
+      }
       const bytes = assetRoutes.get(req.url);
-      if (!bytes) { send(res, 404, {error:"未知素材身份或成员"}); return; }
-      res.writeHead(200, {"content-type":req.url.endsWith("LICENSE.txt") ? "text/plain; charset=utf-8" : "application/octet-stream", "content-length":bytes.byteLength, "cache-control":"no-store", "x-content-type-options":"nosniff"});
-      res.end(bytes); return;
+      if (!bytes) {
+        send(res, 404, { error: "未知素材身份或成员" });
+        return;
+      }
+      res.writeHead(200, {
+        "content-type": req.url.endsWith("LICENSE.txt")
+          ? "text/plain; charset=utf-8"
+          : "application/octet-stream",
+        "content-length": bytes.byteLength,
+        "cache-control": "no-store",
+        "x-content-type-options": "nosniff",
+      });
+      res.end(bytes);
+      return;
     }
     if (
       [
@@ -301,11 +478,28 @@ export function createPlannerMiddleware(
       ].includes(req.url) &&
       req.method === "GET"
     ) {
-      const backend = req.url.includes("backend=llama.cpp") ? "llama.cpp" : "ollama";
-      send(res, 200, await (req.url.endsWith(`model=${LLAMA_SMALL_MODEL}`) ? smallStatus() : statuses[backend]()));
+      const backend = req.url.includes("backend=llama.cpp")
+        ? "llama.cpp"
+        : "ollama";
+      send(
+        res,
+        200,
+        await (req.url.endsWith(`model=${LLAMA_SMALL_MODEL}`)
+          ? smallStatus()
+          : statuses[backend]()),
+      );
       return;
     }
-    if (!["/api/planner/generate", "/api/planner/assets/requirements", "/api/planner/assets/choose", "/api/planner/review/requirements-v2"].includes(req.url) || req.method !== "POST") {
+    if (
+      ![
+        "/api/planner/general/plan",
+        "/api/planner/generate",
+        "/api/planner/assets/requirements",
+        "/api/planner/assets/choose",
+        "/api/planner/review/requirements-v2",
+      ].includes(req.url) ||
+      req.method !== "POST"
+    ) {
       send(res, 404, { error: "未知规划接口" });
       return;
     }
@@ -327,38 +521,121 @@ export function createPlannerMiddleware(
     res.on("close", disconnect);
     // Include body intake in the one-request budget; stalled clients are bounded.
     busy = true;
+    const isGeneral = req.url === "/api/planner/general/plan";
+    const totalTimeout = isGeneral
+      ? setTimeout(
+          () => controller.abort(Error("规划超过120秒，请使用手工模式")),
+          120000,
+        )
+      : null;
     const intakeTimeout = setTimeout(() => req.destroy(), 5000);
+    let generalInput: PlanningRequest | null = null;
     try {
-      const value = await readBody(req);
+      const value = isGeneral
+        ? await abortable(readBody(req, 65536), controller.signal)
+        : await readBody(req);
+      if (isGeneral) {
+        clearTimeout(intakeTimeout);
+        const input = parsePlanningRequest(value);
+        generalInput = input;
+        const library = await abortable(
+          generalLibrary(controller.signal),
+          controller.signal,
+        );
+        const guarded: GeneralTransport = async (request, signal) => {
+          const current = await abortable(generalLibrary(signal), signal);
+          signal.throwIfAborted();
+          if (current.digest !== library.digest)
+            throw Error("素材目录或审阅状态已改变，请重新读取候选");
+          return generalTransport(request, signal);
+        };
+        Object.defineProperty(guarded, "provenance", {
+          value: generalTransport.provenance ?? "constructed",
+        });
+        send(
+          res,
+          200,
+          await planRequest(
+            input,
+            {
+              library,
+              transport: guarded,
+              countTokens: generalCountTokens,
+              now: Date.now,
+            },
+            controller.signal,
+          ),
+        );
+        return;
+      }
       if (req.url === "/api/planner/review/requirements-v2") {
         clearTimeout(intakeTimeout);
         const input = record(value, ["prompt"]);
-        send(res, 200, await interpretReviewRequestV2(parsePrompt(input.prompt), reviewTransport, controller.signal));
+        send(
+          res,
+          200,
+          await interpretReviewRequestV2(
+            parsePrompt(input.prompt),
+            reviewTransport,
+            controller.signal,
+          ),
+        );
         return;
       }
-      if (req.url === "/api/planner/assets/requirements" || req.url === "/api/planner/assets/choose") {
+      if (
+        req.url === "/api/planner/assets/requirements" ||
+        req.url === "/api/planner/assets/choose"
+      ) {
         clearTimeout(intakeTimeout);
         const isRequirements = req.url.endsWith("/requirements");
-        const hasVersion=!!value && typeof value==="object" && Object.hasOwn(value,"catalogVersion");
-        const input = record(value, isRequirements ? ["prompt"] : ["request", ...(hasVersion ? ["catalogVersion"] : [])]);
-        if (!isRequirements && ((hasVersion && input.catalogVersion !== catalog.catalogVersion) || (!hasVersion && catalog.prepared))) throw Error("目录版本已改变，请重新读取候选");
+        const hasVersion =
+          !!value &&
+          typeof value === "object" &&
+          Object.hasOwn(value, "catalogVersion");
+        const input = record(
+          value,
+          isRequirements
+            ? ["prompt"]
+            : ["request", ...(hasVersion ? ["catalogVersion"] : [])],
+        );
+        if (
+          !isRequirements &&
+          ((hasVersion && input.catalogVersion !== catalog.catalogVersion) ||
+            (!hasVersion && catalog.prepared))
+        )
+          throw Error("目录版本已改变，请重新读取候选");
         const evidence = isRequirements
-          ? await interpretRequest(parsePrompt(input.prompt), assetTransport, controller.signal)
-          : await selectAssets(parseAssetRequest(input.request), assetTransport, controller.signal, catalog);
+          ? await interpretRequest(
+              parsePrompt(input.prompt),
+              assetTransport,
+              controller.signal,
+            )
+          : await selectAssets(
+              parseAssetRequest(input.request),
+              assetTransport,
+              controller.signal,
+              catalog,
+            );
         send(res, 200, evidence);
         return;
       }
       const explicit =
         !!value && typeof value === "object" && Object.hasOwn(value, "backend");
-      const explicitModel = !!value && typeof value === "object" && Object.hasOwn(value, "model");
+      const explicitModel =
+        !!value && typeof value === "object" && Object.hasOwn(value, "model");
       const input = record(
         value,
-        explicit ? ["prompt", "backend", ...(explicitModel ? ["model"] : [])] : ["prompt"],
+        explicit
+          ? ["prompt", "backend", ...(explicitModel ? ["model"] : [])]
+          : ["prompt"],
       );
       clearTimeout(intakeTimeout);
       const prompt = parsePrompt(input.prompt);
       const backend = explicit ? parseBackend(input.backend) : "ollama";
-      const model = parseModel(backend, explicitModel ? input.model : modelForBackend(backend));
+      const model = parseModel(
+        backend,
+        explicitModel ? input.model : modelForBackend(backend),
+      );
       const draft = await planScene(
         prompt,
         model === LLAMA_SMALL_MODEL ? smallTransport : transports[backend],
@@ -368,23 +645,56 @@ export function createPlannerMiddleware(
       );
       send(res, 200, draft);
     } catch (error) {
-      if (!controller.signal.aborted)
+      if (generalInput)
+        send(res, 200, {
+          ok: false,
+          request: generalInput,
+          query: null,
+          inputs: [],
+          partial: { intent: null, draft: null, evidence: [] },
+          issues: [
+            {
+              code: "catalog-unavailable",
+              path: "",
+              message: `${errorText(error)}；保留输入，可使用手工模式。`,
+            },
+          ],
+          mode: "manual",
+        });
+      else if (isGeneral || !controller.signal.aborted)
         send(res, 400, { error: errorText(error) });
     } finally {
       clearTimeout(intakeTimeout);
+      if (totalTimeout !== null) clearTimeout(totalTimeout);
       res.off("close", disconnect);
       busy = false;
     }
   };
 }
-export function plannerPlugin(options: {localCatalogPath?:string} = {}): Plugin {
+export function plannerPlugin(
+  options: { localCatalogPath?: string; generalCatalogPath?: string } = {},
+): Plugin {
   return {
     name: "local-scene-planner",
     async configureServer(server) {
-      server.middlewares.use(createPlannerMiddleware({catalog:await loadLocalCatalog(options.localCatalogPath)}));
+      server.middlewares.use(
+        createPlannerMiddleware({
+          catalog: await loadLocalCatalog(options.localCatalogPath),
+          generalLibrary: createGeneralLibrarySource(
+            options.generalCatalogPath,
+          ),
+        }),
+      );
     },
     async configurePreviewServer(server) {
-      server.middlewares.use(createPlannerMiddleware({catalog:await loadLocalCatalog(options.localCatalogPath)}));
+      server.middlewares.use(
+        createPlannerMiddleware({
+          catalog: await loadLocalCatalog(options.localCatalogPath),
+          generalLibrary: createGeneralLibrarySource(
+            options.generalCatalogPath,
+          ),
+        }),
+      );
     },
   };
 }

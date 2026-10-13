@@ -5,6 +5,7 @@ import {
   SplatMesh,
   PackedSplats,
 } from "@sparkjsdev/spark";
+import { UnsignedByteType, UnsignedIntType } from "three";
 
 let spark: SparkRenderer | undefined;
 let disposals = 0;
@@ -55,7 +56,7 @@ for (const [kind, Class] of [
             held = true;
             let release!: (error?: string) => void;
             const gate = new Promise<void>((resolve, reject) => {
-              release = (error) => error ? reject(Error(error)) : resolve();
+              release = (error) => (error ? reject(Error(error)) : resolve());
             });
             const prior = releaseInitialization;
             releaseInitialization = (error) => {
@@ -107,6 +108,67 @@ export const sparkProbe = {
       ),
       worker: Boolean(spark?.sortWorker),
       workerReturned,
+    };
+  },
+  resources() {
+    if (!spark) throw Error("Spark has not rendered");
+    const accumulators = [
+      ...new Set([spark.display, spark.current, ...spark.accumulators]),
+    ].map((accumulator) => {
+      const target = accumulator.target;
+      const textures =
+        target?.textures.map((texture) => ({
+          type: texture.type,
+          format: texture.format,
+          bytesPerSlot:
+            texture.type === UnsignedIntType
+              ? 16
+              : texture.type === UnsignedByteType
+                ? 4
+                : null,
+        })) ?? [];
+      if (textures.some((texture) => texture.bytesPerSlot === null))
+        throw Error("Unobserved accumulator texture type");
+      return {
+        maxSplats: accumulator.maxSplats,
+        mappingNodes: accumulator.mapping.length,
+        target: target
+          ? {
+              width: target.width,
+              height: target.height,
+              depth: target.depth,
+              textures,
+            }
+          : null,
+        targetBytes: target
+          ? target.width *
+            target.height *
+            target.depth *
+            textures.reduce((n, texture) => n + texture.bytesPerSlot!, 0)
+          : 0,
+      };
+    });
+    const ordering = spark.uniforms.ordering.value as {
+      image?: { data?: { byteLength: number } };
+    } | null;
+    return {
+      configuration: {
+        accumExtSplats: spark.accumExtSplats,
+        covSplats: spark.covSplats,
+        enableLod: spark.enableLod,
+        enableDriveLod: spark.enableDriveLod,
+        pagedExtSplats: spark.pagedExtSplats,
+        hasTarget: Boolean(spark.target),
+      },
+      accumulators,
+      targetBytes: accumulators.reduce(
+        (n, accumulator) => n + accumulator.targetBytes,
+        0,
+      ),
+      orderingHighWater: spark.maxSplats,
+      orderingCpuBytes: spark.orderingTexture?.image.data?.byteLength ?? 0,
+      uniformOrderingBytes: ordering?.image?.data?.byteLength ?? 0,
+      readbackBytes: spark.readback32.byteLength,
     };
   },
   pauseReadback(ms: number) {

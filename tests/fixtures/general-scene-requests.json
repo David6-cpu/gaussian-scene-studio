@@ -1,0 +1,1923 @@
+{
+  "fixtureVersion": 2,
+  "provenance": "constructed",
+  "frozenFrom": "approved plan: 固定验收样本与通用性证明",
+  "notes": [
+    "Human expectations, not real model outputs or asset/visual acceptance.",
+    "Original and paraphrase stay fixed when a model fails.",
+    "Unspecified user water requires review. A none baseline applies only to explicit no-water positives.",
+    "Pending water levels must pass T7 preflight; these fixtures do not establish geometric feasibility."
+  ],
+  "baseline": {
+    "seed": 42,
+    "width": 8,
+    "depth": 8,
+    "spacing": 0.1,
+    "elevation": 0,
+    "slopeDegrees": 0,
+    "noiseAmplitude": 0,
+    "noiseScale": 2,
+    "noiseOctaves": 1,
+    "sourceRestriction": "either",
+    "scale": 1,
+    "keepDry": true
+  },
+  "catalogFixtures": [
+    {
+      "id": "constructed-positive-v1",
+      "provenance": "constructed",
+      "productionAdmission": false,
+      "candidates": [
+        {
+          "id": "constructed-rock",
+          "contentVersion": "constructed-v1",
+          "category": "rock",
+          "origin": "procedural",
+          "qualityStatus": "candidate"
+        },
+        {
+          "id": "constructed-grass",
+          "contentVersion": "constructed-v1",
+          "category": "grass",
+          "origin": "procedural",
+          "qualityStatus": "candidate"
+        },
+        {
+          "id": "constructed-reed",
+          "contentVersion": "constructed-v1",
+          "category": "reed",
+          "origin": "procedural",
+          "qualityStatus": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "constructed-negative-no-tree-no-captured-grass-rock-v1",
+      "provenance": "constructed",
+      "productionAdmission": false,
+      "candidates": [
+        {
+          "id": "constructed-rock",
+          "contentVersion": "constructed-v1",
+          "category": "rock",
+          "origin": "procedural",
+          "qualityStatus": "candidate"
+        },
+        {
+          "id": "constructed-grass",
+          "contentVersion": "constructed-v1",
+          "category": "grass",
+          "origin": "procedural",
+          "qualityStatus": "candidate"
+        },
+        {
+          "id": "constructed-reed",
+          "contentVersion": "constructed-v1",
+          "category": "reed",
+          "origin": "procedural",
+          "qualityStatus": "candidate"
+        }
+      ],
+      "absentCategories": ["tree", "snow", "ice"],
+      "absentCapturedCategories": ["grass", "rock"]
+    }
+  ],
+  "cases": [
+    {
+      "id": "P01",
+      "kind": "positive",
+      "original": "平坦场地，东边3组石头、西边4丛低草，不要水；4×4",
+      "paraphrase": "做一个4×4的平地，石头3组放东面，低草4丛放西面，不设水体。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "高度全0、水点0、数量/东西区域精确",
+        "automaticSubmission": false,
+        "waterDecision": "explicit-or-fixed-human-fixture"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P01",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          },
+          {
+            "regionId": "west",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [0, 2.0]
+            }
+          },
+          {
+            "regionId": "east",
+            "shape": {
+              "kind": "rectangle",
+              "min": [0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "east",
+            "count": 3,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "west",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "P02",
+      "kind": "positive",
+      "original": "朝北缓升5度，东西两侧分别低草4丛和石头2组，中间留空，不要水；6×6",
+      "paraphrase": "场地6×6，朝北上升5度；东侧4丛低草，西侧2组石头，中央留空，不要水。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "坡向/角度、中央宽1单位排除带",
+        "automaticSubmission": false,
+        "waterDecision": "explicit-or-fixed-human-fixture"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P02",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 6,
+          "depth": 6,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 5,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.0, -3.0],
+              "max": [3.0, 3.0]
+            }
+          },
+          {
+            "regionId": "west",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.0, -3.0],
+              "max": [-0.5, 3.0]
+            }
+          },
+          {
+            "regionId": "east",
+            "shape": {
+              "kind": "rectangle",
+              "min": [0.5, -3.0],
+              "max": [3.0, 3.0]
+            }
+          },
+          {
+            "regionId": "central-exclusion",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-0.5, -3.0],
+              "max": [0.5, 3.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "east",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "west",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "outside",
+            "groupId": "grass",
+            "regionId": "central-exclusion"
+          },
+          {
+            "kind": "outside",
+            "groupId": "rock",
+            "regionId": "central-exclusion"
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "P03",
+      "kind": "positive",
+      "original": "起伏幅度0.2、3层噪声，2组石头4丛低草，不要水；8×6",
+      "paraphrase": "在8×6场地上做幅度0.2、3层噪声的起伏，摆2组石头和4丛低草，无水。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "噪声参数真实保留，无固定中央凹地模板",
+        "automaticSubmission": false,
+        "waterDecision": "explicit-or-fixed-human-fixture"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P03",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 8,
+          "depth": 6,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0.2,
+          "noiseScale": 2,
+          "noiseOctaves": 3,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-4.0, -3.0],
+              "max": [4.0, 3.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "P04",
+      "kind": "positive",
+      "original": "从南到北直河，宽0.6、深0.1，两岸4丛低草4丛芦苇、2组石头",
+      "paraphrase": "一条宽0.6、深0.1的直河由南向北，两岸安排低草4丛、芦苇4丛和石头2组。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "中心线[(0.5,0),(0.5,1)]、bankWidth0.4、连通干岸",
+        "automaticSubmission": false,
+        "waterDecision": "program-suggestion-pending"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P04",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 8,
+          "depth": 8,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-4.0, -4.0],
+              "max": [4.0, 4.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "reed",
+            "assetRef": {
+              "id": "constructed-reed",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "reed",
+            "distance": 0.1
+          },
+          {
+            "kind": "nearWater",
+            "groupId": "reed",
+            "min": 0.1,
+            "max": 0.9
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "P05",
+      "kind": "positive",
+      "original": "南北曲折河流，宽0.8、深0.15，两岸低草和芦苇各4、2组石头；10×8",
+      "paraphrase": "10×8的场地上安排南北走向的曲折河道，宽0.8、深0.15；河流两岸总共安排低草4丛、芦苇4丛和石头2组。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "中心线[(0.5,0),(0.65,0.3),(0.35,0.7),(0.5,1)]，bank0.4",
+        "automaticSubmission": false,
+        "waterDecision": "program-suggestion-pending"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P05",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 10,
+          "depth": 8,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.65, 0.3],
+            [0.35, 0.7],
+            [0.5, 1]
+          ],
+          "width": 0.8,
+          "depth": 0.15,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -4.0],
+              "max": [5.0, 4.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "reed",
+            "assetRef": {
+              "id": "constructed-reed",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "reed",
+            "distance": 0.1
+          },
+          {
+            "kind": "nearWater",
+            "groupId": "reed",
+            "min": 0.1,
+            "max": 0.9
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "P06",
+      "kind": "positive",
+      "original": "东西曲折河流，宽1.2、深0.1，两岸低草4、芦苇2、石头2；8×10",
+      "paraphrase": "场地8×10，一条东西向曲折河流宽1.2、深0.1；两岸有4丛低草、2丛芦苇、2组石头。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "P05中心线交换u/v，连续水域真实改变",
+        "automaticSubmission": false,
+        "waterDecision": "program-suggestion-pending"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P06",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 8,
+          "depth": 10,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0, 0.5],
+            [0.3, 0.65],
+            [0.7, 0.35],
+            [1, 0.5]
+          ],
+          "width": 1.2,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-4.0, -5.0],
+              "max": [4.0, 5.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "reed",
+            "assetRef": {
+              "id": "constructed-reed",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "reed",
+            "distance": 0.1
+          },
+          {
+            "kind": "nearWater",
+            "groupId": "reed",
+            "min": 0.1,
+            "max": 0.9
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "P07",
+      "kind": "positive",
+      "original": "中央一处方形静水面，2组石头2丛低草放外围；8×8",
+      "paraphrase": "8×8场地正中设置一处方形静水面，外围摆石头2组和低草2丛。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "polygon世界坐标(-1,-1),(1,-1),(1,1),(-1,1)，depth0.1/bank0.4、闭合岸",
+        "automaticSubmission": false,
+        "waterDecision": "program-suggestion-pending"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P07",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 8,
+          "depth": 8,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "surface",
+          "waterId": "water",
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill",
+          "polygon": [
+            [-1, -1],
+            [1, -1],
+            [1, 1],
+            [-1, 1]
+          ]
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-4.0, -4.0],
+              "max": [4.0, 4.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "P08",
+      "kind": "positive",
+      "original": "7.5×5.5，向北升2度、南北弯河宽0.6，4丛低草2组石头",
+      "paraphrase": "场地宽7.5深5.5，往北抬升2度，做一条宽0.6的南北弯河，放低草4丛、石头2组。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "P05归一化线、depth0.1/bank0.3；0.1采样精确尺寸",
+        "automaticSubmission": false,
+        "waterDecision": "program-suggestion-pending"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P08",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 7.5,
+          "depth": 5.5,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 2,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.65, 0.3],
+            [0.35, 0.7],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.3,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.75, -2.75],
+              "max": [3.75, 2.75]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "P09",
+      "kind": "positive",
+      "original": "河岸水位-0.025，2组石头4丛低草；4×4",
+      "paraphrase": "做4×4的河岸场地，水位固定-0.025，摆放2组石头与4丛低草。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "直河width0.6/depth0.1/bank0.3；水位不替换",
+        "automaticSubmission": false,
+        "waterDecision": "explicit-or-fixed-human-fixture"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P09",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.3,
+          "level": -0.025,
+          "levelStatus": "resolved",
+          "levelSource": "user",
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "P10",
+      "kind": "positive",
+      "original": "平地中央2组石头，外围6丛低草，全部允许程序素材，不要水",
+      "paraphrase": "不带水的平地，中间摆2组石头，周围摆6丛低草，所有素材都可以用程序生成的。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "数量、来源允许范围及中央/外围区域",
+        "automaticSubmission": false,
+        "waterDecision": "explicit-or-fixed-human-fixture"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P10",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 8,
+          "depth": 8,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-4.0, -4.0],
+              "max": [4.0, 4.0]
+            }
+          },
+          {
+            "regionId": "center",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-0.5, -0.5],
+              "max": [0.5, 0.5]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "center",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 6,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          },
+          {
+            "kind": "outside",
+            "groupId": "grass",
+            "regionId": "center"
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "P11",
+      "kind": "positive",
+      "original": "干燥缓坡，向东3度，西侧低草2丛、东侧石头3组，不放水",
+      "paraphrase": "不要水，做朝东升3度的干燥缓坡，西边2丛低草，东边3组石头。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "明确无水，坡向东，不误成河岸",
+        "automaticSubmission": false,
+        "waterDecision": "explicit-or-fixed-human-fixture"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P11",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 8,
+          "depth": 8,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 3,
+          "slopeAzimuthDegrees": 90,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-4.0, -4.0],
+              "max": [4.0, 4.0]
+            }
+          },
+          {
+            "regionId": "west",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-4.0, -4.0],
+              "max": [0, 4.0]
+            }
+          },
+          {
+            "regionId": "east",
+            "shape": {
+              "kind": "rectangle",
+              "min": [0, -4.0],
+              "max": [4.0, 4.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "west",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "east",
+            "count": 3,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "P12",
+      "kind": "positive",
+      "original": "平地，2组石头和稀疏低草，不要水，种子17；10×6",
+      "paraphrase": "10×6的无水平地，用种子17，放2组石头和稀疏的低草。",
+      "catalogFixture": "constructed-positive-v1",
+      "expected": {
+        "outcome": "reviewable-after-preflight",
+        "assertion": "seed17、石2、低草建议2且来源标建议",
+        "automaticSubmission": false,
+        "waterDecision": "explicit-or-fixed-human-fixture"
+      },
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-P12",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 17,
+        "domain": {
+          "width": 10,
+          "depth": 6,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -3.0],
+              "max": [5.0, 3.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "suggestion",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [
+            {
+              "key": "groups.grass.count",
+              "value": 2,
+              "source": "default",
+              "span": null,
+              "strength": "suggestion",
+              "negated": false
+            }
+          ],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      }
+    },
+    {
+      "id": "N01",
+      "kind": "negative",
+      "original": "生成森林，要有树",
+      "paraphrase": "做一片森林，树必须有。",
+      "catalogFixture": "constructed-negative-no-tree-no-captured-grass-rock-v1",
+      "expected": {
+        "outcome": "blocked",
+        "assertion": "缺已准入树资产，不换草",
+        "automaticSubmission": false,
+        "mustNotSubstitute": true
+      },
+      "structuredDraft": null
+    },
+    {
+      "id": "N02",
+      "kind": "negative",
+      "original": "雪山和冰雪地面",
+      "paraphrase": "做雪山，地面也要有冰雪。",
+      "catalogFixture": "constructed-negative-no-tree-no-captured-grass-rock-v1",
+      "expected": {
+        "outcome": "blocked",
+        "assertion": "缺资产/范围外，不湿地染白",
+        "automaticSubmission": false,
+        "mustNotSubstitute": true
+      },
+      "structuredDraft": null
+    },
+    {
+      "id": "N03",
+      "kind": "negative",
+      "original": "只要实拍石头，不要程序石头（测试库没有实拍石头）",
+      "paraphrase": "石头只用实拍的，程序生成的不要；这个测试库没有实拍石头。",
+      "catalogFixture": "constructed-negative-no-tree-no-captured-grass-rock-v1",
+      "expected": {
+        "outcome": "blocked",
+        "assertion": "缺素材、零偷偷替代",
+        "automaticSubmission": false,
+        "mustNotSubstitute": true
+      },
+      "structuredDraft": null
+    },
+    {
+      "id": "N04",
+      "kind": "negative",
+      "original": "不要程序草，只要实拍草（测试库没有实拍草）",
+      "paraphrase": "草必须是实拍草，不用程序草；这个测试库没有实拍草。",
+      "catalogFixture": "constructed-negative-no-tree-no-captured-grass-rock-v1",
+      "expected": {
+        "outcome": "blocked",
+        "assertion": "来源否定保留、缺素材",
+        "automaticSubmission": false,
+        "mustNotSubstitute": true
+      },
+      "structuredDraft": null
+    },
+    {
+      "id": "N05",
+      "kind": "negative",
+      "original": "生成30组石头",
+      "paraphrase": "我要三十组石头。",
+      "catalogFixture": "constructed-negative-no-tree-no-captured-grass-rock-v1",
+      "expected": {
+        "outcome": "blocked",
+        "assertion": "超20硬拒绝，不截成20",
+        "automaticSubmission": false,
+        "mustNotSubstitute": true
+      },
+      "structuredDraft": null
+    },
+    {
+      "id": "N06",
+      "kind": "negative",
+      "original": "10米宽场地",
+      "paraphrase": "场地宽度要十米。",
+      "catalogFixture": "constructed-negative-no-tree-no-captured-grass-rock-v1",
+      "expected": {
+        "outcome": "clarify",
+        "assertion": "米制需澄清，不按展示单位完成",
+        "automaticSubmission": false,
+        "mustNotSubstitute": true
+      },
+      "structuredDraft": null
+    },
+    {
+      "id": "N07",
+      "kind": "negative",
+      "original": "要河流，同时完全不要水",
+      "paraphrase": "既要有河流，又一点水都不能有。",
+      "catalogFixture": "constructed-negative-no-tree-no-captured-grass-rock-v1",
+      "expected": {
+        "outcome": "clarify",
+        "assertion": "明确冲突需澄清，不任选",
+        "automaticSubmission": false,
+        "mustNotSubstitute": true
+      },
+      "structuredDraft": null
+    },
+    {
+      "id": "N08",
+      "kind": "negative",
+      "original": "不是不要非程序草，放在左边",
+      "paraphrase": "并不是不要非程序草，把它放到左侧。",
+      "catalogFixture": "constructed-negative-no-tree-no-captured-grass-rock-v1",
+      "expected": {
+        "outcome": "clarify",
+        "assertion": "双重否定+左方参照不明，澄清",
+        "automaticSubmission": false,
+        "mustNotSubstitute": true
+      },
+      "structuredDraft": null
+    }
+  ]
+}

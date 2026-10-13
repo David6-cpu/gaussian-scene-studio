@@ -8,7 +8,8 @@
     "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run && node --test scripts/launcher.test.mjs",
+    "test": "vitest run && node --test scripts/launcher.test.mjs scripts/worldlabs/*.test.mjs",
+    "worldlabs": "node scripts/worldlabs-trial.mjs",
     "test:e2e": "playwright test --project=functional",
     "bench": "playwright test --project=benchmark --headed --workers=1"
   },

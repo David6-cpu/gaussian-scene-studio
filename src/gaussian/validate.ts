@@ -1,5 +1,5 @@
 import type { GaussianBuffer, BuiltScene } from "./types";
-import { assertRiversideGround } from "../terrain/riverside";
+import { assertRiversideGround } from "../terrain/riverside.ts";
 export function assertGaussianBuffer(buffer: GaussianBuffer): void {
   if (
     !Number.isSafeInteger(buffer.count) ||

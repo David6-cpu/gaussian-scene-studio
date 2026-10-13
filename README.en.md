@@ -1,14 +1,14 @@
 # Gaussian Scene Studio
 
-### From a scene idea to a reviewable, explorable wetland
+### From one sentence to a reviewable, editable Gaussian scene
 
-An undergraduate research prototype for ecological education: natural-language requirements, an attributed asset catalog, procedural placement and Gaussian Splatting, with inspectable choices and reproducible results.
+An undergraduate research prototype developing a general scene pipeline: asset-aware local AI planning, parametric terrain and static water, constrained assembly and stable editing. Wetlands and forests are examples, not the only supported scene template.
 
 [中文](README.md) · [Local models](docs/LOCAL_MODELS.md) · [Third-party notices](THIRD_PARTY_NOTICES.md)
 
 ![Concept diagram: catalog-based construction and local environment import lead to browsing; educational interaction remains planned](docs/images/project-concept.svg)
 
-> **Research prototype.** Catalog selection, reviewable layouts and local SPZ import are implemented. External whole-world generation is not integrated. Real riverbank visual quality, knowledge hotspots and learning outcomes remain unverified. The diagram is a research concept, not generated output.
+> **2026-10-13: general pipeline in development.** Tasks 1–7 passed engineering implementation and independent specification/quality review. The supplemental Spark capacity/lifecycle budget fix also passed both reviews. Tasks 8–14, asset/visual admission and real-model end-to-end evaluation remain pending. The ordinary UI still exposes the earlier workbench. [Current progress and evidence scope](docs/validation/general-scene-progress-2026-10-13.md) (Chinese). Existing images show historical previews, not completion of the new pipeline.
 
 ## Research questions
 
@@ -35,7 +35,13 @@ Our work concerns constraints, knowledge organization, interaction and evaluatio
 
 ## Current progress
 
-Documentation updated **2026-10-08**; engineering checks below were completed on 2026-10-07.
+Documentation updated **2026-10-13**. Tasks 1–7 cover asset contracts/loading, preview, plan/snapshot contracts, candidate planning, terrain and static-water solving. Spark correction `089d5e8` has passed both independent reviews. Tasks 8–14 remain: Gaussian surfaces, assembly, persistence, editing, transactions, workbench integration and real end-to-end acceptance.
+
+Task 5 has injected-test evidence only. Three local assets remain candidates. The 42 frozen procedural inputs retain 30 successes and 12 rejections; this does not certify scanned patches or appearance. See the [stage report](docs/validation/general-scene-progress-2026-10-13.md).
+
+### Existing workbench (compatibility route)
+
+The following table describes earlier implemented functionality, separately from the new general pipeline.
 
 | Area | Implemented | Remaining limits |
 |---|---|---|
@@ -77,6 +83,7 @@ Mac `.command` shortcuts require the original machine's existing runtime and ver
 
 | Path | Responsibility |
 |---|---|
+| `src/general-scene/` | General assets, planning, terrain, water and preview (in development) |
 | `src/selection/`, `src/planner/` | Requirements, catalog selection and local model adapters |
 | `src/review-v2/` | Water intent and versioned review contracts |
 | `src/environment/` | SPZ validation, preview lifecycle, storage and backups |
@@ -86,10 +93,11 @@ Mac `.command` shortcuts require the original machine's existing runtime and ver
 
 TypeScript, Vite, Three.js, Spark, Vitest and Playwright form the stack, with versions pinned in the lockfile. The planning API runs with Vite's development/preview server; static hosting alone does not provide inference.
 
-Checks on 2026-10-07: **514 unit + eight launcher tests, type checking and production build passed; Chrome functional checks: 110 passed / 15 conditional skips.** Eight legacy visual cases were excluded. This does not claim that all browser tests or visual quality pass. Independent review found an initialization timeout/cancellation issue, fixed with regressions observed failing before the fix and passing afterward.
+Historical workbench checks, not final acceptance of the new pipeline, on 2026-10-07: **514 unit + eight launcher tests, type checking and production build passed; Chrome functional checks: 110 passed / 15 conditional skips.** Eight legacy visual cases were excluded. This does not claim that all browser tests or visual quality pass. Independent review found an initialization timeout/cancellation issue, fixed with regressions observed failing before the fix and passing afterward.
 
 ```sh
-npm test
+./node_modules/.bin/vitest run
+node --test scripts/launcher.test.mjs
 npm run typecheck
 npm run build
 # The functional scope reported above:
@@ -100,14 +108,11 @@ Browser checks use installed Google Chrome and local port 4173. `npm run test:e2
 
 [Environment import](docs/validation/environment-import-results.md) · [Water intent v2](docs/validation/water-semantics-v2-results.md) · [Riverbank review](docs/validation/riverbank-review-preview-results.md) · [Controlled ground admission](docs/validation/controlled-ground-admission-results.md) · [SH3 import](docs/SH_IMPORT.md)
 
-## Next research steps
+## Next development steps
 
-- Validate a real whole-scene SPZ for river, grass and rock appearance and device resource use.
-- Compare raw prompts, ordinary expansion and structured constraints with the same backend and budget, using human checks or blinded ratings.
-- Add three to five manually curated knowledge hotspots and one exploration task to an accepted scene.
-- Extend to wetland plant zones, food relationships and water-quality scenarios.
+Complete Tasks 8–14 in order: Gaussian terrain/water, constrained assembly, save/reopen, stable local editing, transaction control, ordinary workbench integration, and real local-model, visual and performance acceptance. Preview must succeed before a scene is accepted; legacy modes and archives remain compatible.
 
-These are research goals, not shipped features or quality guarantees. Team size, external budget and teaching evaluation remain open.
+World Labs and paid generation services, foundation-model training, dynamic water and leaf animation are outside this stage. Knowledge hotspots and teaching evaluation remain later research. Engineering tests do not establish natural appearance or a complete prompt-to-scene workflow.
 
 ## Licensing and acknowledgements
 

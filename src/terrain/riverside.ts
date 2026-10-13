@@ -1,5 +1,5 @@
 import type { HeightField, RiversideGround } from "../gaussian/types";
-import { riversideData } from "./riverside-data";
+import { riversideData } from "./riverside-data.ts";
 
 export const RIVERSIDE_BYTES = 6 * 1024 * 1024;
 export function riversideGround(): RiversideGround {

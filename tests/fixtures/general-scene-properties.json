@@ -1,0 +1,4377 @@
+{
+  "fixtureVersion": 1,
+  "provenance": "constructed",
+  "notes": [
+    "Thirty fixed parameter inputs, no production compiler imports, no stored placement answer coordinates.",
+    "Water levels remain pending where user did not fix them; T7/T9 determine feasibility and record the input digest and actual rejection reason."
+  ],
+  "cases": [
+    {
+      "id": "G00",
+      "seed": 0,
+      "terrainCase": "flat",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-00",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 0,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G01",
+      "seed": 1,
+      "terrainCase": "flat",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-01",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 1,
+        "domain": {
+          "width": 7.5,
+          "depth": 5.5,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.75, -2.75],
+              "max": [3.75, 2.75]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G02",
+      "seed": 2,
+      "terrainCase": "flat",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-02",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 2,
+        "domain": {
+          "width": 10,
+          "depth": 10,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -5.0],
+              "max": [5.0, 5.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G03",
+      "seed": 3,
+      "terrainCase": "north-slope-3",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-03",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 3,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 3,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G04",
+      "seed": 4,
+      "terrainCase": "north-slope-3",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-04",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 4,
+        "domain": {
+          "width": 7.5,
+          "depth": 5.5,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 3,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.75, -2.75],
+              "max": [3.75, 2.75]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G05",
+      "seed": 5,
+      "terrainCase": "north-slope-3",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-05",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 5,
+        "domain": {
+          "width": 10,
+          "depth": 10,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 3,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -5.0],
+              "max": [5.0, 5.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G06",
+      "seed": 6,
+      "terrainCase": "noise-0.2",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-06",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 6,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0.2,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G07",
+      "seed": 7,
+      "terrainCase": "noise-0.2",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-07",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 7,
+        "domain": {
+          "width": 7.5,
+          "depth": 5.5,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0.2,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.75, -2.75],
+              "max": [3.75, 2.75]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G08",
+      "seed": 8,
+      "terrainCase": "noise-0.2",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-08",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 8,
+        "domain": {
+          "width": 10,
+          "depth": 10,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0.2,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -5.0],
+              "max": [5.0, 5.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G09",
+      "seed": 9,
+      "terrainCase": "flat",
+      "waterCase": "straight-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-09",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 9,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G10",
+      "seed": 10,
+      "terrainCase": "flat",
+      "waterCase": "straight-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-10",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 10,
+        "domain": {
+          "width": 7.5,
+          "depth": 5.5,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.75, -2.75],
+              "max": [3.75, 2.75]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G11",
+      "seed": 11,
+      "terrainCase": "flat",
+      "waterCase": "straight-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-11",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 11,
+        "domain": {
+          "width": 10,
+          "depth": 10,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -5.0],
+              "max": [5.0, 5.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G12",
+      "seed": 12,
+      "terrainCase": "north-slope-3",
+      "waterCase": "straight-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-12",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 12,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 3,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G13",
+      "seed": 13,
+      "terrainCase": "north-slope-3",
+      "waterCase": "straight-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-13",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 13,
+        "domain": {
+          "width": 7.5,
+          "depth": 5.5,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 3,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.75, -2.75],
+              "max": [3.75, 2.75]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G14",
+      "seed": 14,
+      "terrainCase": "north-slope-3",
+      "waterCase": "straight-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-14",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 14,
+        "domain": {
+          "width": 10,
+          "depth": 10,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 3,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -5.0],
+              "max": [5.0, 5.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G15",
+      "seed": 15,
+      "terrainCase": "noise-0.2",
+      "waterCase": "straight-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-15",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 15,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0.2,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G16",
+      "seed": 16,
+      "terrainCase": "noise-0.2",
+      "waterCase": "straight-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-16",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 16,
+        "domain": {
+          "width": 7.5,
+          "depth": 5.5,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0.2,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.75, -2.75],
+              "max": [3.75, 2.75]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G17",
+      "seed": 17,
+      "terrainCase": "noise-0.2",
+      "waterCase": "straight-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-17",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 17,
+        "domain": {
+          "width": 10,
+          "depth": 10,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0.2,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -5.0],
+              "max": [5.0, 5.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G18",
+      "seed": 18,
+      "terrainCase": "flat",
+      "waterCase": "bent-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-18",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 18,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.65, 0.3],
+            [0.35, 0.7],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G19",
+      "seed": 19,
+      "terrainCase": "flat",
+      "waterCase": "bent-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-19",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 19,
+        "domain": {
+          "width": 7.5,
+          "depth": 5.5,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.65, 0.3],
+            [0.35, 0.7],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.75, -2.75],
+              "max": [3.75, 2.75]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G20",
+      "seed": 20,
+      "terrainCase": "flat",
+      "waterCase": "bent-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-20",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 20,
+        "domain": {
+          "width": 10,
+          "depth": 10,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.65, 0.3],
+            [0.35, 0.7],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -5.0],
+              "max": [5.0, 5.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G21",
+      "seed": 21,
+      "terrainCase": "north-slope-3",
+      "waterCase": "bent-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-21",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 21,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 3,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.65, 0.3],
+            [0.35, 0.7],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G22",
+      "seed": 22,
+      "terrainCase": "north-slope-3",
+      "waterCase": "bent-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-22",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 22,
+        "domain": {
+          "width": 7.5,
+          "depth": 5.5,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 3,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.65, 0.3],
+            [0.35, 0.7],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.75, -2.75],
+              "max": [3.75, 2.75]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G23",
+      "seed": 23,
+      "terrainCase": "north-slope-3",
+      "waterCase": "bent-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-23",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 23,
+        "domain": {
+          "width": 10,
+          "depth": 10,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 3,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.65, 0.3],
+            [0.35, 0.7],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -5.0],
+              "max": [5.0, 5.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G24",
+      "seed": 24,
+      "terrainCase": "noise-0.2",
+      "waterCase": "bent-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-24",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 24,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0.2,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.65, 0.3],
+            [0.35, 0.7],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G25",
+      "seed": 25,
+      "terrainCase": "noise-0.2",
+      "waterCase": "bent-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-25",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 25,
+        "domain": {
+          "width": 7.5,
+          "depth": 5.5,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0.2,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.65, 0.3],
+            [0.35, 0.7],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.75, -2.75],
+              "max": [3.75, 2.75]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G26",
+      "seed": 26,
+      "terrainCase": "noise-0.2",
+      "waterCase": "bent-river",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-26",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 26,
+        "domain": {
+          "width": 10,
+          "depth": 10,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0.2,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "river",
+          "waterId": "water",
+          "controlPoints": [
+            [0.5, 0],
+            [0.65, 0.3],
+            [0.35, 0.7],
+            [0.5, 1]
+          ],
+          "width": 0.6,
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -5.0],
+              "max": [5.0, 5.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G27",
+      "seed": 27,
+      "terrainCase": "flat",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-27",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 27,
+        "domain": {
+          "width": 4,
+          "depth": 4,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-2.0, -2.0],
+              "max": [2.0, 2.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G28",
+      "seed": 28,
+      "terrainCase": "flat",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-28",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 28,
+        "domain": {
+          "width": 7.5,
+          "depth": 5.5,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-3.75, -2.75],
+              "max": [3.75, 2.75]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    },
+    {
+      "id": "G29",
+      "seed": 29,
+      "terrainCase": "flat",
+      "waterCase": "none",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-property-29",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 29,
+        "domain": {
+          "width": 10,
+          "depth": 10,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-5.0, -5.0],
+              "max": [5.0, 5.0]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 4,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedInvariants": [
+        "finite-heights-in-minus2-plus2",
+        "spacing-exactly-divides-extents",
+        "height-node-cap-10201",
+        "unique-output-ownership",
+        "deterministic-cpu-digest",
+        "no-hidden-instance-coordinates",
+        "geometry-rejection-reported-without-changing-input"
+      ]
+    }
+  ],
+  "negativeCases": [
+    {
+      "id": "self-intersection",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-negative-self-intersection",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 8,
+          "depth": 8,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "surface",
+          "waterId": "water",
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": null,
+          "levelStatus": "pending",
+          "levelSource": null,
+          "reshapePolicy": "cut-and-fill",
+          "polygon": [
+            [-1, -1],
+            [1, 1],
+            [-1, 1],
+            [1, -1]
+          ]
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-4, -4],
+              "max": [4, 4]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedGate": "contract",
+      "expectedOutcome": "reject",
+      "reason": "non-simple polygon"
+    },
+    {
+      "id": "fully-flooded",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-negative-fully-flooded",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 8,
+          "depth": 8,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "surface",
+          "waterId": "water",
+          "depth": 0.1,
+          "bankWidth": 0.4,
+          "level": 2,
+          "levelStatus": "resolved",
+          "levelSource": "user",
+          "reshapePolicy": "preserve",
+          "polygon": [
+            [-4, -4],
+            [4, -4],
+            [4, 4],
+            [-4, 4]
+          ]
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-4, -4],
+              "max": [4, 4]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedGate": "water-preflight",
+      "expectedOutcome": "reject",
+      "reason": "dry area below25%"
+    },
+    {
+      "id": "steep-footprint",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-negative-steep-footprint",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 8,
+          "depth": 8,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 12,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-4, -4],
+              "max": [4, 4]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 2,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 5,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedGate": "placement",
+      "expectedOutcome": "reject",
+      "reason": "entire footprint exceeds5 degrees"
+    },
+    {
+      "id": "21-instances",
+      "structuredDraft": {
+        "documentType": "general-scene-plan",
+        "schemaVersion": 1,
+        "planId": "constructed-negative-21-instances",
+        "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "catalogDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generatorVersion": "constructed-v1",
+        "rulesVersion": "constructed-v1",
+        "prngVersion": "fnv1a32-v1",
+        "seed": 42,
+        "domain": {
+          "width": 8,
+          "depth": 8,
+          "unit": "display-unit",
+          "up": "+Y"
+        },
+        "terrain": {
+          "source": "procedural",
+          "elevation": 0,
+          "slopeDegrees": 0,
+          "slopeAzimuthDegrees": 0,
+          "noiseAmplitude": 0,
+          "noiseScale": 2,
+          "noiseOctaves": 1,
+          "spacing": 0.1
+        },
+        "water": {
+          "mode": "none"
+        },
+        "surfaceStyleRef": {
+          "id": "constructed-style",
+          "contentVersion": "constructed-v1"
+        },
+        "regions": [
+          {
+            "regionId": "all",
+            "shape": {
+              "kind": "rectangle",
+              "min": [-4, -4],
+              "max": [4, 4]
+            }
+          }
+        ],
+        "groups": [
+          {
+            "groupId": "rock",
+            "assetRef": {
+              "id": "constructed-rock",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 20,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          },
+          {
+            "groupId": "grass",
+            "assetRef": {
+              "id": "constructed-grass",
+              "contentVersion": "constructed-v1"
+            },
+            "regionId": "all",
+            "count": 1,
+            "countMode": "hard",
+            "required": true,
+            "scaleRange": [1, 1],
+            "orientation": {
+              "mode": "upright-yaw",
+              "yawDegrees": [0, 360]
+            },
+            "placementPolicy": {
+              "maxSlopeDegrees": 15,
+              "spacingMargin": 0.1
+            }
+          }
+        ],
+        "relations": [
+          {
+            "kind": "keepDry",
+            "groupId": "rock",
+            "distance": 0.1
+          },
+          {
+            "kind": "keepDry",
+            "groupId": "grass",
+            "distance": 0.1
+          }
+        ],
+        "budgetProfileId": "general-v1",
+        "budgetEstimate": null,
+        "review": {
+          "assumptions": [],
+          "unsupported": [],
+          "missing": [],
+          "substitutions": [],
+          "acceptedSubstitutions": [],
+          "manualOverrides": [],
+          "fieldSources": []
+        }
+      },
+      "expectedGate": "contract",
+      "expectedOutcome": "reject",
+      "reason": "total instance cap20"
+    }
+  ]
+}
