@@ -1,0 +1,121 @@
+{
+  "verifiedAtUtc": "2026-10-21T01:27:37.070039+00:00",
+  "repository": "David6-cpu/gaussian-scene-studio",
+  "releaseId": 419044580,
+  "tag": "project-assets-2026-10-21",
+  "url": "https://github.com/David6-cpu/gaussian-scene-studio/releases/tag/project-assets-2026-10-21",
+  "draft": false,
+  "prerelease": true,
+  "tagTarget": "cb7be6d7fb1d8b59b8a1dc6ac4d83019db7f3156",
+  "assetCount": 10,
+  "totalAttachmentBytes": 2334094794,
+  "allNamesSizesStatesAndSha256Match": true,
+  "assets": [
+    {
+      "name": "README-assets.md",
+      "bytes": 1881,
+      "state": "uploaded",
+      "localSha256": "a9d1839eea46838ea9370ea1ab045d44d828f1ef23038404459257cc0454a5a8",
+      "githubDigest": "sha256:a9d1839eea46838ea9370ea1ab045d44d828f1ef23038404459257cc0454a5a8",
+      "matched": true,
+      "url": "https://github.com/David6-cpu/gaussian-scene-studio/releases/download/project-assets-2026-10-21/README-assets.md",
+      "id": 660999630
+    },
+    {
+      "name": "additional-assets-and-provenance.zip",
+      "bytes": 282788854,
+      "state": "uploaded",
+      "localSha256": "04edca4e65ad0c6edcfd0e1187f82b90d97bf94476e9749c11c03603f719b008",
+      "githubDigest": "sha256:04edca4e65ad0c6edcfd0e1187f82b90d97bf94476e9749c11c03603f719b008",
+      "matched": true,
+      "url": "https://github.com/David6-cpu/gaussian-scene-studio/releases/download/project-assets-2026-10-21/additional-assets-and-provenance.zip",
+      "id": 660999622
+    },
+    {
+      "name": "asset-manifest.json",
+      "bytes": 108061,
+      "state": "uploaded",
+      "localSha256": "1656039776c16d8dd8313bc257ae3be8d0245a3445c6b3a1fbd022f56acdad58",
+      "githubDigest": "sha256:1656039776c16d8dd8313bc257ae3be8d0245a3445c6b3a1fbd022f56acdad58",
+      "matched": true,
+      "url": "https://github.com/David6-cpu/gaussian-scene-studio/releases/download/project-assets-2026-10-21/asset-manifest.json",
+      "id": 660999636
+    },
+    {
+      "name": "daisy-original.zip",
+      "bytes": 441739759,
+      "state": "uploaded",
+      "localSha256": "3a8cf1709fb485777f54f30a4cbd5b5913f1f06934a359f862fd297be8a1d714",
+      "githubDigest": "sha256:3a8cf1709fb485777f54f30a4cbd5b5913f1f06934a359f862fd297be8a1d714",
+      "matched": true,
+      "url": "https://github.com/David6-cpu/gaussian-scene-studio/releases/download/project-assets-2026-10-21/daisy-original.zip",
+      "id": 660999634
+    },
+    {
+      "name": "forest-scan-original.zip",
+      "bytes": 505617614,
+      "state": "uploaded",
+      "localSha256": "82e969680fefc4ca5d1a8685384fb5ddb9a04629675161be5e72b3497671afcc",
+      "githubDigest": "sha256:82e969680fefc4ca5d1a8685384fb5ddb9a04629675161be5e72b3497671afcc",
+      "matched": true,
+      "url": "https://github.com/David6-cpu/gaussian-scene-studio/releases/download/project-assets-2026-10-21/forest-scan-original.zip",
+      "id": 660999635
+    },
+    {
+      "name": "forest-scan-scene.ply",
+      "bytes": 505617082,
+      "state": "uploaded",
+      "localSha256": "5d207842252a9219abb590b6f2442fe5765becb0a15d41604d37f1d4140ff5f4",
+      "githubDigest": "sha256:5d207842252a9219abb590b6f2442fe5765becb0a15d41604d37f1d4140ff5f4",
+      "matched": true,
+      "url": "https://github.com/David6-cpu/gaussian-scene-studio/releases/download/project-assets-2026-10-21/forest-scan-scene.ply",
+      "id": 660999679
+    },
+    {
+      "name": "riverside-original.zip",
+      "bytes": 181682817,
+      "state": "uploaded",
+      "localSha256": "6f85b3eb79e02220d47697cfb9a1cfd8e0935cf116b3a03a3891504c59280c8a",
+      "githubDigest": "sha256:6f85b3eb79e02220d47697cfb9a1cfd8e0935cf116b3a03a3891504c59280c8a",
+      "matched": true,
+      "url": "https://github.com/David6-cpu/gaussian-scene-studio/releases/download/project-assets-2026-10-21/riverside-original.zip",
+      "id": 660999680
+    },
+    {
+      "name": "riverside-scene.ply",
+      "bytes": 181682301,
+      "state": "uploaded",
+      "localSha256": "44e6e42ceaacec4b5fe79d3dbd78203416f6080225a81f15b9cb8199b5c39d8a",
+      "githubDigest": "sha256:44e6e42ceaacec4b5fe79d3dbd78203416f6080225a81f15b9cb8199b5c39d8a",
+      "matched": true,
+      "url": "https://github.com/David6-cpu/gaussian-scene-studio/releases/download/project-assets-2026-10-21/riverside-scene.ply",
+      "id": 661001296
+    },
+    {
+      "name": "rock-original-point-cloud.splat",
+      "bytes": 234855616,
+      "state": "uploaded",
+      "localSha256": "c6999cae22a6da0ccac6a8964af04d4d219266aac075930769557ab13d3603a2",
+      "githubDigest": "sha256:c6999cae22a6da0ccac6a8964af04d4d219266aac075930769557ab13d3603a2",
+      "matched": true,
+      "url": "https://github.com/David6-cpu/gaussian-scene-studio/releases/download/project-assets-2026-10-21/rock-original-point-cloud.splat",
+      "id": 661002841
+    },
+    {
+      "name": "SHA256SUMS",
+      "bytes": 809,
+      "state": "uploaded",
+      "localSha256": "e617b1e37b09701ae4c7e0af257d0da3b50ac10d0de62772f15442bd5d63ca63",
+      "githubDigest": "sha256:e617b1e37b09701ae4c7e0af257d0da3b50ac10d0de62772f15442bd5d63ca63",
+      "matched": true,
+      "url": "https://github.com/David6-cpu/gaussian-scene-studio/releases/download/project-assets-2026-10-21/SHA256SUMS",
+      "id": 661004611
+    }
+  ],
+  "originalAssetFiles": 172,
+  "originalAssetBytes": 2384338595,
+  "originalSupportFiles": 62,
+  "originalSupportBytes": 866343,
+  "extraLicenseSourceCompanions": 9,
+  "remainingFromRequestedInventory": []
+}

@@ -1,0 +1,28 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "typecheck"
+  ],
+  "head": "0be5216a33b52841c77654ec59d71300970e3f0f",
+  "workingTreeChanges": [
+    " M PROJECT_STATUS.md",
+    " M src/general-scene/panel.ts",
+    " M tests/e2e/environment.spec.ts",
+    " M tests/support/harness.ts",
+    "?? docs/validation/general-workbench-blocked-2026-10-20T1428Z.md",
+    "?? docs/validation/general-workbench-recovery-2026-10-20.md",
+    "?? tests/e2e/first-frame-probe.spec.ts",
+    "?? tests/e2e/manual-example-recovery.spec.ts"
+  ],
+  "exitCode": 0,
+  "startedAtUtc": "2026-10-21T01:16:45.971691+00:00",
+  "endedAtUtc": "2026-10-21T01:16:46.514418+00:00",
+  "durationSeconds": 0.543,
+  "timedOut": false,
+  "stdout": "\n> wetland-gaussian-f0@0.1.0 typecheck\n> tsc --noEmit\n\n",
+  "stderr": "",
+  "headStable": true,
+  "statusStable": true,
+  "scope": "Formal typecheck of local working tree. Not a full test run or frozen-commit final acceptance. Local source HEAD is separate from the public code checkpoint."
+}
