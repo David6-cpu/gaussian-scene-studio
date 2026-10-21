@@ -993,3 +993,106 @@ test("long actual model identity within a 64KiB response remains exact evidence"
   if (out.ok) throw Error("Expected identity refusal");
   expect(out.partial.evidence[0]).toMatchObject({ model, raw: actualRaw });
 });
+
+test("phase observer reports actual stage entry once even when intent needs repair", async () => {
+  const p = await ports(),
+    events: string[] = [];
+  p.transport.mockImplementationOnce(async () => {
+    events.push("model:intent");
+    return reply("{");
+  });
+  p.transport.mockImplementationOnce(async () => {
+    events.push("model:repair");
+    return reply(intent());
+  });
+  const planned = await draft(p.library);
+  p.transport.mockImplementation(async () => {
+    events.push("model:plan");
+    return reply(planned);
+  });
+  const out = await planRequest(
+    request(),
+    {
+      ...p,
+      onPhase: (phase: string) => events.push(phase),
+    },
+    signal(),
+  );
+  expect(out.ok).toBe(true);
+  expect(events).toEqual([
+    "parsing",
+    "model:intent",
+    "model:repair",
+    "querying",
+    "planning",
+    "model:plan",
+  ]);
+});
+
+test("query failure never announces planning and a pre-aborted request announces no phase", async () => {
+  const p = await ports(),
+    phases: string[] = [],
+    observed = {
+      ...p,
+      library: await library([]),
+      onPhase: (phase: string) => phases.push(phase),
+    },
+    c = new AbortController();
+  const out = await planRequest(request(), observed, signal());
+  expect(out.ok).toBe(false);
+  expect(phases).toEqual(["parsing", "querying"]);
+  expect(p.transport).toHaveBeenCalledTimes(1);
+  phases.length = 0;
+  c.abort();
+  expect((await planRequest(request(), observed, c.signal)).ok).toBe(false);
+  expect(phases).toEqual([]);
+  expect(p.transport).toHaveBeenCalledTimes(1);
+});
+
+test.each(["parsing", "querying", "planning"])(
+  "cancellation from %s observer prevents later stage work",
+  async (phase) => {
+    const p = await ports(),
+      phases: string[] = [],
+      c = new AbortController();
+    const out = await planRequest(
+      request(),
+      {
+        ...p,
+        onPhase: (actual: string) => {
+          phases.push(actual);
+          if (actual === phase) c.abort(Error("cancelled at " + actual));
+        },
+      },
+      c.signal,
+    );
+    expect(out.ok).toBe(false);
+    expect(phases).toEqual(
+      ["parsing", "querying", "planning"].slice(
+        0,
+        ["parsing", "querying", "planning"].indexOf(phase) + 1,
+      ),
+    );
+    expect(p.transport).toHaveBeenCalledTimes(phase === "parsing" ? 0 : 1);
+  },
+);
+
+test.each([false, true])(
+  "observer failures do not change planning (async=%s)",
+  async (asyncFailure) => {
+    const p = await ports(),
+      observer = vi.fn(() => {
+        if (asyncFailure) return Promise.reject(Error("observer rejected"));
+        throw Error("observer threw");
+      });
+    const out = await planRequest(
+      request(),
+      { ...p, onPhase: observer },
+      signal(),
+    );
+    expect(out.ok).toBe(true);
+    expect(observer.mock.calls).toHaveLength(3);
+    expect(p.transport).toHaveBeenCalledTimes(2);
+    await Promise.resolve();
+  },
+);

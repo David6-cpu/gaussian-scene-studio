@@ -35,6 +35,12 @@ import {
   deferredSparkDisposal,
   releaseGeneratorMaterial,
 } from "./spark-lifecycle";
+import {
+  SPARK_BUDGET_OPTIONS,
+  sparkRendererBudget,
+  sparkSceneCapacity,
+} from "./spark-budget";
+import type { Residency } from "../general-scene/controller";
 type Entry = {
   mesh: SplatMesh;
   buffer: GaussianBuffer | NonNullable<BuiltScene["ground"]>;
@@ -95,7 +101,8 @@ export async function createGaussianView(
   controls.minDistance = 0.5;
   controls.maxDistance = 90;
   controls.maxPolarAngle = Math.PI * 0.49;
-  const spark = new SparkRenderer({ renderer, enableLod: false });
+  // These equal Spark 2.3.1's previous defaults with enableLod:false.
+  const spark = new SparkRenderer({ renderer, ...SPARK_BUDGET_OPTIONS });
   const disposeSpark = deferredSparkDisposal(spark, () => renderer.dispose());
   scene.add(spark);
   let bank = new Map<GaussianBuffer, PackedSplats>(),
@@ -127,7 +134,236 @@ export async function createGaussianView(
   };
   let extents = new Map<string, number>();
   let pending: SceneSwap | undefined;
+  type Owner = {
+    input?: BuiltScene;
+    loadingArrays?: import("./types").GroundArrays;
+    sources: Map<GaussianBuffer, PackedSplats>;
+    ground?: NonNullable<typeof ground>;
+    prototypes: Map<string, AssetPrototype>;
+    initializers: number;
+    preparing: boolean;
+    released: boolean;
+    cleanupFailed: boolean;
+  };
+  const owners = new Map<Map<GaussianBuffer, PackedSplats>, Owner>();
+  let preparing = 0,
+    rendererDisposed = false,
+    rendererReleased = false,
+    retainedCapacity = 0,
+    releaseFailed = false;
+  let releaseError: unknown;
+  let resolveReleased!: () => void, rejectReleased!: (e: unknown) => void;
+  const released = new Promise<void>((resolve, reject) => {
+    resolveReleased = resolve;
+    rejectReleased = reject;
+  });
+  // dispose keeps its existing void signature; observers can attach later.
+  void released.catch(() => {});
+  let quiet:
+    | { promise: Promise<void>; resolve(): void; reject(e: unknown): void }
+    | undefined;
+  const failRelease = (error: unknown, owner?: Owner) => {
+    if (owner) owner.cleanupFailed = true;
+    if (!releaseFailed) {
+      releaseFailed = true;
+      releaseError = error;
+      rejectReleased(error);
+    }
+    quiet?.reject(releaseError);
+    quiet = undefined;
+  };
+  const preparationBusy = () =>
+    preparing > 0 || [...owners.values()].some((o) => o.initializers > 0);
+  const busy = () =>
+    releaseFailed ||
+    preparationBusy() ||
+    disposeSpark.activity().busy ||
+    (disposed && !rendererReleased);
+  const finish = () => {
+    if (releaseFailed) return;
+    try {
+      if (rendererDisposed && !rendererReleased && !preparationBusy()) {
+        // Spark dispose frees GL objects but retains CPU readback, mappings and
+        // uniforms. Drop these closed-only references after sort AND initialization.
+        spark.readback32 = new Uint32Array(0);
+        for (const a of new Set([
+          spark.display,
+          spark.current,
+          ...spark.accumulators,
+        ])) {
+          a.mapping = [];
+          a.readback = null;
+          a.readbackSplats = [];
+        }
+        for (const uniform of [
+          spark.uniforms.ordering,
+          spark.uniforms.extSplats,
+          spark.uniforms.extSplats2,
+        ])
+          (uniform as { value: THREE.Texture | null }).value = null;
+        rendererReleased = true;
+        resolveReleased();
+      }
+      if (!busy()) {
+        const waiting = quiet;
+        quiet = undefined;
+        waiting?.resolve();
+      }
+    } catch (error) {
+      failRelease(error);
+    }
+  };
+  const finishOwner = (owner: Owner) => {
+    if (
+      !owner.released ||
+      owner.cleanupFailed ||
+      owner.preparing ||
+      owner.initializers
+    )
+      return;
+    owner.input = undefined;
+    owner.loadingArrays = undefined;
+    owner.sources.clear();
+    owner.ground = undefined;
+    owner.prototypes.clear();
+    for (const [key, value] of owners) if (value === owner) owners.delete(key);
+  };
+  const releaseFrame = (
+    entries: Map<string, Entry>,
+    sources: Map<GaussianBuffer, PackedSplats>,
+    g?: ExtSplats,
+  ) => {
+    const owner = owners.get(sources);
+    if (owner) owner.released = true;
+    try {
+      release(entries, sources, g);
+      if (owner) {
+        owner.prototypes.clear();
+        finishOwner(owner);
+      }
+    } catch (error) {
+      failRelease(error, owner);
+      throw error;
+    }
+  };
+  const initialize = (
+    owner: Owner,
+    work: Promise<unknown>,
+    cleanup: () => void,
+  ) => {
+    owner.initializers++;
+    const tracked = work.finally(() => {
+      try {
+        if (owner.released) cleanup();
+      } catch (error) {
+        failRelease(error, owner);
+        throw error;
+      } finally {
+        // A cleanup failure is terminal too; retain its owner, not a phantom
+        // pending initializer. Every later waiter observes the same failure.
+        owner.initializers--;
+        finishOwner(owner);
+        finish();
+      }
+    });
+    // Promise.all may reject before another initializer reaches its terminal state.
+    void tracked.catch(() => {});
+    return tracked;
+  };
+  const residency = (): Residency => {
+    const buffers = new Set<ArrayBuffer>(),
+      rendererBuffers = new Set<ArrayBuffer>();
+    const add = (array: unknown, target = buffers) => {
+      if (
+        ArrayBuffer.isView(array) &&
+        array.buffer instanceof ArrayBuffer &&
+        array.buffer.byteLength
+      )
+        target.add(array.buffer);
+    };
+    let sourceExtraBytes = 0;
+    for (const owner of owners.values()) {
+      if (owner.input) {
+        add(owner.input.terrain.data);
+        if (owner.input.water) add(owner.input.water.data);
+        for (const a of owner.input.assets) {
+          add(a.lods.full.data);
+          add(a.lods.coarse.data);
+        }
+        if (owner.input.ground?.arrays)
+          for (const a of Object.values(owner.input.ground.arrays)) add(a);
+      }
+      if (owner.loadingArrays)
+        for (const a of Object.values(owner.loadingArrays)) add(a);
+      for (const [b, p] of owner.sources) {
+        add(b.data);
+        add(p.packedArray);
+        // Source GPU textures plus not-yet-created packed CPU storage. Once
+        // storage exists, its actual backing moves into buffers instead.
+        const capacityBytes = Math.ceil(b.count / 2048) * 2048 * 16;
+        sourceExtraBytes += Math.max(
+          capacityBytes,
+          p.packedArray?.byteLength ?? 0,
+        );
+        if (!p.packedArray && !owner.released)
+          sourceExtraBytes += capacityBytes;
+      }
+      for (const a of owner.prototypes.values()) {
+        add(a.lods.full.data);
+        add(a.lods.coarse.data);
+      }
+      if (owner.ground) {
+        const { descriptor, source } = owner.ground;
+        if (descriptor.arrays)
+          for (const a of Object.values(descriptor.arrays)) add(a);
+        for (const a of source.extArrays) add(a);
+        for (const a of Object.values(source.extra)) add(a);
+        sourceExtraBytes += Math.ceil(descriptor.count / 2048) * 2048 * 96;
+      }
+    }
+    if (!rendererReleased) {
+      add(spark.readback32, rendererBuffers);
+      add(spark.orderingTexture?.image.data, rendererBuffers);
+      add(spark.uniforms.ordering.value?.image.data, rendererBuffers);
+      for (const b of rendererBuffers) buffers.add(b);
+    }
+    const rendererCpuBytes = [...rendererBuffers].reduce(
+      (n, b) => n + b.byteLength,
+      0,
+    );
+    return {
+      buffers: [...buffers],
+      extraBytes:
+        sourceExtraBytes +
+        (rendererReleased
+          ? 0
+          : Math.max(
+              0,
+              sparkRendererBudget(retainedCapacity).reservedBytes -
+                rendererCpuBytes,
+            )),
+      settled: !busy(),
+    };
+  };
   return {
+    residency,
+    whenQuiescent() {
+      if (releaseFailed) return Promise.reject(releaseError);
+      if (!busy()) return Promise.resolve();
+      if (!quiet) {
+        let resolve!: () => void, reject!: (e: unknown) => void;
+        const promise = new Promise<void>((a, b) => {
+          resolve = a;
+          reject = b;
+        });
+        quiet = { promise, resolve, reject };
+        void disposeSpark
+          .whenQuiescent()
+          .then(finish, (error) => failRelease(error));
+      }
+      return quiet.promise;
+    },
+    whenReleased: () => released,
     async setScene(this: GaussianView, input: BuiltScene) {
       try {
         const swap = await this.prepareScene(input);
@@ -139,12 +375,14 @@ export async function createGaussianView(
     },
     async prepareScene(input: BuiltScene): Promise<SceneSwap> {
       if (disposed) throw new Error("Renderer disposed");
+      if (releaseFailed) throw releaseError;
       pending?.rollback();
       const ticket = ++generation;
       sourceLoad?.abort();
       const load = new AbortController();
       sourceLoad = load;
       const current = () => {
+        if (releaseFailed) throw releaseError;
         if (ticket !== generation || disposed || load.signal.aborted)
           throw new DOMException("Scene superseded", "AbortError");
       };
@@ -153,7 +391,29 @@ export async function createGaussianView(
       const nextBank = new Map<GaussianBuffer, PackedSplats>(),
         nextMeshes = new Map<string, Entry>();
       let nextGround: typeof ground;
+      const owner: Owner = {
+        input,
+        sources: new Map(),
+        prototypes: new Map(),
+        initializers: 0,
+        preparing: true,
+        released: false,
+        cleanupFailed: false,
+      };
+      owners.set(nextBank, owner);
+      preparing++;
       try {
+        const capacity = sparkSceneCapacity(
+          [
+            input.terrain.count,
+            input.water?.count ?? 0,
+            input.ground?.count ?? 0,
+            ...input.instances.map((i) => {
+              const a = input.assets.find((a) => a.id === i.assetId)!;
+              return Math.max(a.lods.full.count, a.lods.coarse.count);
+            }),
+          ].filter((n) => n > 0),
+        );
         const p = new THREE.Vector3(),
           s = new THREE.Vector3(),
           q = new THREE.Quaternion(),
@@ -161,7 +421,8 @@ export async function createGaussianView(
         for (const b of sourceBuffers(input)) {
           const packed = new PackedSplats({ maxSplats: b.count });
           nextBank.set(b, packed);
-          await packed.initialized;
+          owner.sources.set(b, packed);
+          await initialize(owner, packed.initialized, () => packed.dispose());
           current();
           for (let i = 0; i < b.data.length; i += 14) {
             const d = b.data;
@@ -209,6 +470,7 @@ export async function createGaussianView(
                 },
                 load.signal,
               );
+              owner.loadingArrays = asset.arrays;
               current();
               const supplied = await parsePreparedDefinition(asset.definition);
               current();
@@ -219,9 +481,11 @@ export async function createGaussianView(
                 throw Error("Prepared resolver identity mismatch");
               arrays = asset.arrays;
             }
+            owner.loadingArrays = arrays;
             await validatePreparedArrays(d, arrays);
           } else {
             arrays ??= await loadRiversideArrays(load.signal);
+            owner.loadingArrays = arrays;
             await validateRiversideArrays(arrays);
           }
           current();
@@ -237,7 +501,8 @@ export async function createGaussianView(
             },
           });
           nextGround = { descriptor, source };
-          await source.initialized;
+          owner.ground = nextGround;
+          await initialize(owner, source.initialized, () => source.dispose());
           current();
           if (source.getNumSh() !== 3)
             throw new Error("Riverside SH3载入不完整");
@@ -248,7 +513,9 @@ export async function createGaussianView(
             raycastable: false,
           });
           nextMeshes.set("$ground", { mesh, buffer: descriptor });
-          await mesh.initialized;
+          await initialize(owner, mesh.initialized, () =>
+            disposeBorrower(mesh),
+          );
           current();
           mesh.position.fromArray(descriptor.position);
           mesh.quaternion.fromArray(descriptor.rotation);
@@ -261,11 +528,16 @@ export async function createGaussianView(
           add(i.id, a.lods[i.lod], i);
         }
         await Promise.all(
-          [...nextMeshes.values()].map((e) => e.mesh.initialized),
+          [...nextMeshes.values()].map((e) =>
+            initialize(owner, e.mesh.initialized, () =>
+              disposeBorrower(e.mesh),
+            ),
+          ),
         );
         current();
         const nextPrototypes = new Map(input.assets.map((a) => [a.id, a])),
           nextExtents = new Map<string, number>();
+        owner.prototypes = nextPrototypes;
         for (const a of input.assets) {
           let extent = 0;
           const d = a.lods.full.data;
@@ -304,6 +576,7 @@ export async function createGaussianView(
             prototypes = nextPrototypes;
             extents = nextExtents;
             for (const e of meshes.values()) scene.add(e.mesh);
+            retainedCapacity = Math.max(retainedCapacity, capacity);
             active = true;
           },
           commit() {
@@ -312,7 +585,10 @@ export async function createGaussianView(
               throw Error("Scene swap cannot commit");
             closed = true;
             pending = undefined;
-            release(old.meshes, old.bank, old.ground?.source);
+            releaseFrame(old.meshes, old.bank, old.ground?.source);
+            old.ground = undefined;
+            old.prototypes.clear();
+            nextGround = undefined;
           },
           rollback() {
             if (closed) return;
@@ -333,15 +609,27 @@ export async function createGaussianView(
               controls.enabled = old.interactive;
               for (const e of meshes.values()) scene.add(e.mesh);
             }
+            old.ground = undefined;
             if (pending === swap) pending = undefined;
-            release(nextMeshes, nextBank, nextGround?.source);
+            releaseFrame(nextMeshes, nextBank, nextGround?.source);
+            nextGround = undefined;
           },
         };
         pending = swap;
         return swap;
       } catch (e) {
-        release(nextMeshes, nextBank, nextGround?.source);
+        releaseFrame(nextMeshes, nextBank, nextGround?.source);
+        nextGround = undefined;
         throw e;
+      } finally {
+        owner.preparing = false;
+        // Swap closures need only the owned frame, never the full input scene.
+        owner.input = undefined;
+        owner.loadingArrays = undefined;
+        input = undefined!;
+        preparing--;
+        finishOwner(owner);
+        finish();
       }
     },
     cancelPendingScene() {
@@ -368,13 +656,14 @@ export async function createGaussianView(
         if (!needed.has(b)) {
           p.dispose();
           bank.delete(b);
+          owners.get(bank)?.sources.delete(b);
         }
     },
     clearScene() {
       pending?.rollback();
       generation++;
       sourceLoad?.abort();
-      release(meshes, bank, ground?.source);
+      releaseFrame(meshes, bank, ground?.source);
       ground = undefined;
       prototypes.clear();
       extents.clear();
@@ -424,7 +713,7 @@ export async function createGaussianView(
       camera.updateProjectionMatrix();
     },
     render() {
-      if (disposed) return;
+      if (disposed || releaseFailed) return;
       if (controls.enabled) controls.update();
       if (guard)
         camera.position.fromArray(
@@ -493,17 +782,37 @@ export async function createGaussianView(
     },
     dispose() {
       if (disposed) return;
-      pending?.rollback();
+      // Stop drawing and bind the terminal result before any cleanup may throw.
       disposed = true;
       generation++;
-      sourceLoad?.abort();
-      release(meshes, bank, ground?.source);
-      ground = undefined;
-      prototypes.clear();
-      extents.clear();
+      pendingDisposals.set(canvas, released);
+      const attempt = (cleanup: () => void) => {
+        try {
+          cleanup();
+        } catch (error) {
+          failRelease(error);
+        }
+      };
+      attempt(() => pending?.rollback());
+      attempt(() => sourceLoad?.abort());
+      attempt(() => {
+        releaseFrame(meshes, bank, ground?.source);
+        ground = undefined;
+        prototypes.clear();
+        extents.clear();
+      });
       guard = null;
-      controls.dispose();
-      pendingDisposals.set(canvas, disposeSpark());
+      attempt(() => controls.dispose());
+      // Continue independent renderer teardown after a source/borrower failure;
+      // the failed owner's ledger and rejected release result remain retained.
+      attempt(() => {
+        void disposeSpark()
+          .then(() => {
+            rendererDisposed = true;
+            finish();
+          })
+          .catch((error) => failRelease(error));
+      });
     },
   };
 }

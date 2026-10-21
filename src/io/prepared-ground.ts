@@ -1,4 +1,8 @@
-import { utils } from "@sparkjsdev/spark";
+import {
+  decodeExtRgb,
+  decodeExtSplat,
+  isValidExtSplat,
+} from "../gaussian/ext-decode.ts";
 import { finite, integer, oneOf, record, vector } from "../data-validation.ts";
 import {
   parseAssetMetadata,
@@ -208,30 +212,13 @@ export async function validatePreparedArrays(
       throw Error("Prepared array length or digest mismatch");
   }
   for (let i = 0; i < d.count; i++) {
-    const s = utils.decodeExtSplat([arrays.ext0, arrays.ext1], i);
-    const numbers = [
-      ...s.center.toArray(),
-      ...s.scales.toArray(),
-      ...s.quaternion.toArray(),
-      s.color.r,
-      s.color.g,
-      s.color.b,
-      s.opacity,
-    ];
-    if (
-      numbers.some((x) => !Number.isFinite(x)) ||
-      s.scales.toArray().some((x) => x <= 0) ||
-      Math.abs(s.quaternion.length() - 1) > 0.01 ||
-      s.opacity < 0 ||
-      s.opacity > 1
-    )
+    if (!isValidExtSplat(decodeExtSplat([arrays.ext0, arrays.ext1], i)))
       throw Error("Invalid encoded Gaussian");
     for (let k = 0; k < 15; k++) {
-      const c = utils.decodeExtRgb(
+      const c = decodeExtRgb(
         arrays[SH3_KEYS[2 + Math.floor(k / 4)]][i * 4 + (k % 4)],
       );
-      if (![c.r, c.g, c.b].every(Number.isFinite))
-        throw Error("Invalid encoded SH");
+      if (!c.every(Number.isFinite)) throw Error("Invalid encoded SH");
     }
   }
 }

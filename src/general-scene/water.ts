@@ -1523,7 +1523,15 @@ function gridCoordinates(f: TerrainField, x: number, z: number) {
     dz = z - a[2];
   return [(dx * zz - dz * zx) / det, (dz * xx - dx * xz) / det];
 }
-function inActive(f: TerrainField, active: Uint8Array, x: number, z: number) {
+/** Existing bilinear active-cell membership only, with no support/height query.
+ * Consumers require a validated T7 active-cell array; false proves no bilinear
+ * water output at this point, not that the point is valid/dry terrain. */
+export function isWaterActiveCell(
+  f: TerrainField,
+  active: Uint8Array,
+  x: number,
+  z: number,
+) {
   const [gx, gz] = gridCoordinates(f, x, z),
     ix = Math.min(f.nx - 2, Math.max(0, Math.floor(gx + 1e-10))),
     iz = Math.min(f.nz - 2, Math.max(0, Math.floor(gz + 1e-10)));
@@ -1665,7 +1673,7 @@ export function sampleWaterDomain(
       };
     }
     const wet =
-        inActive(solution.field, solution.domain.activeCells, x, z) &&
+        isWaterActiveCell(solution.field, solution.domain.activeCells, x, z) &&
         q.value.height < solution.resolvedWater.level,
       d = shoreDistance(solution.domain, [x, z]);
     return {

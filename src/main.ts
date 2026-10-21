@@ -1,4 +1,9 @@
 import "./style.css";
+import { createGeneralIntegration } from "./general-scene/integration";
+import { mountGeneralScenePanel } from "./general-scene/panel";
+import { friendlyMessage } from "./user-message";
+import { collectBuffers, type Residency } from "./general-scene/controller";
+
 import { mountEnvironmentPanel } from "./environment/panel";
 import { mountPlanner } from "./planner/panel";
 import { mountAssetSelection } from "./selection/panel";
@@ -50,13 +55,17 @@ import { measureRoute } from "./benchmark";
 
 const query = new URLSearchParams(location.search);
 const reviewEnabled = query.get("review") === "1";
+// Engineering tools (legacy workbench, performance measurement) stay folded
+// away unless asked for, so the first screen shows one path.
+const advanced = query.has("advanced") || query.get("surface") === "baseline";
 const app = document.querySelector<HTMLElement>("#app")!;
 app.innerHTML = `
-<header class="topbar"><div class="brand"><span class="brand-mark">W</span><div><p class="eyebrow">WETLAND / FIELD LAB</p><h1>湿地生成实验室</h1></div></div><div class="phase"><span class="dot"></span> F0 · 统一高斯验证</div></header>
-<div class="workspace"><aside class="sidebar"><div class="intro"><p class="eyebrow">01 / 构建场景</p><h2>一块可以探索的湿地</h2><p>调整地形与资产，观察高斯场景的形态、覆盖和细节。</p></div>
+<header class="topbar"><div class="brand"><span class="brand-mark">W</span><div><p class="eyebrow">GAUSSIAN SCENE STUDIO</p><h1>高斯自然场景工作室</h1></div></div><div class="phase"><span class="dot"></span> 本机运行 · 预览版</div></header>
+<div class="workspace"><aside class="sidebar"><div class="intro"><p class="eyebrow">01 / 描述场景</p><h2>用一句话生成自然场景</h2><p>描述想要的地形、水体、石头和植物，审阅设置后生成可以旋转查看的 3D 场景，并保存在本机。</p></div>
+<section id="general-scene-panel" aria-label="生成自然场景"></section>
 <section id="scene-review"${reviewEnabled ? "" : " hidden"} aria-label="场景审阅与预览"></section>
 <section id="environment-panel" aria-label="导入环境与本机记录"></section>
-<details id="advanced-compat"${!reviewEnabled || query.has("advanced") || query.get("surface") === "baseline" ? " open" : ""}><summary>高级与旧版本兼容</summary>
+<details id="advanced-compat"${advanced ? " open" : ""}><summary>高级与旧版本兼容</summary>
 <div class="mode-note">Riverside 地表 · 程序低矮细叶草丛与碎石候选（非实拍）</div>
 <section id="asset-planner" aria-label="湿地两阶段选材"></section>
 <section id="planner" aria-label="场景规划与版本"></section>
@@ -83,7 +92,7 @@ app.innerHTML = `
 <div class="canvas-wrap"><canvas aria-label="湿地高斯场景"></canvas><div class="canvas-label"><span class="dot"></span><span>GAUSSIAN SCENE</span></div><div class="scene-stats"><div><b id="instance-count">—</b><small>实际实例</small></div><div><b id="active-count">—</b><small>活跃高斯</small></div><div><b id="source-count">—</b><small>共享源高斯</small></div></div><div class="camera-bar"><button data-camera="overlap" class="selected">总览</button><button data-camera="top">俯视</button><button data-camera="eye">眼高</button><button data-camera="low">低角度</button><button data-camera="near">近景</button></div></div>
 <div class="viewer-bottom"><span>拖动旋转 · 右键平移 · 滚轮缩放</span><span id="build-time">等待构建</span></div>
 <p id="ground-credit" class="footnote" hidden><a href="https://superspl.at/scene/8f52baf1" target="_blank" rel="noopener noreferrer">Riverside © VeryOS</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> · 连续裁片、SH3量化及整体旋转/缩放 · <a href="/assets/riverside-ground-v1/LICENSE.txt">原始许可</a> · <a href="/assets/riverside-ground-v1/SOURCE.json">素材与修改记录</a></p>
-<div class="measurement-panel"><div><p class="eyebrow">03 / 验证记录</p><p id="measurement-summary">测量需要 1280×720、DPR=1，保持前台；Esc 可中止。质量和主机内存需另行核验。</p></div><button id="measure" disabled>60 秒性能测量</button><button id="save-measurement" disabled>保存测量</button></div><pre id="measurement-data" hidden></pre><pre id="scene-evidence" hidden></pre>
+<div class="measurement-panel"${advanced ? "" : " hidden"}><div><p class="eyebrow">03 / 验证记录</p><p id="measurement-summary">测量需要 1280×720、DPR=1，保持前台；Esc 可中止。质量和主机内存需另行核验。</p></div><button id="measure" disabled>60 秒性能测量</button><button id="save-measurement" disabled>保存测量</button></div><pre id="measurement-data" hidden></pre><pre id="scene-evidence" hidden></pre>
 </section></div>`;
 const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
@@ -121,6 +130,7 @@ const canvas = document.querySelector("canvas")!,
   status = $("status");
 let view: GaussianView,
   worker: Worker | null = null,
+  cancelWorker: (() => void) | null = null,
   requestId = 0,
   result: SceneBuildResult | null = null,
   lost = false,
@@ -134,10 +144,156 @@ let planner: ReturnType<typeof mountPlanner> | undefined;
 let assetPlanner: ReturnType<typeof mountAssetSelection> | undefined;
 let sceneReview: ReturnType<typeof mountSceneReview> | undefined;
 let environmentPanel: ReturnType<typeof mountEnvironmentPanel> | undefined;
-let reviewController: PreviewController<ResolvedReview, SceneReviewRecord> | undefined;
+let reviewController:
+  PreviewController<ResolvedReview, SceneReviewRecord> | undefined;
 let previewResult: BuildResult | null = null;
 let initialLoadRecipe: F0Recipe | null = null;
 let catalogContext: CatalogContext;
+let legacyInitializing = true,
+  legacyPaused = false,
+  legacyFrames = 0,
+  legacyTitle = "";
+const legacyRoots = new Set<unknown>(),
+  legacyDownloads = new Set<Blob>(),
+  legacyDrawWaiters = new Set<() => void>();
+let lastDrawRequest = -1,
+  lastDrawView: GaussianView | undefined;
+const legacyJobs = new Set<Promise<unknown>>(),
+  retiredViews = new Set<GaussianView>();
+const originalInert = new Map<HTMLElement, boolean>(),
+  originalHidden = new Map<HTMLElement, HTMLElement["hidden"]>();
+function legacyResidency(): Residency {
+  const observed = [...(view ? [view] : []), ...retiredViews].map((v) =>
+    v.residency(),
+  );
+  const environment = environmentPanel?.residency();
+  if (environment) observed.push(environment);
+  return {
+    buffers: [
+      ...new Set([
+        ...collectBuffers([result, previewResult, ...legacyRoots]),
+        ...observed.flatMap((r) => [...r.buffers]),
+      ]),
+    ],
+    extraBytes:
+      observed.reduce((n, r) => n + r.extraBytes, 0) +
+      [...legacyDownloads].reduce((n, b) => n + b.size, 0),
+    settled: legacyJobs.size === 0 && observed.every((r) => r.settled),
+  };
+}
+async function legacyQuiescent() {
+  while (legacyJobs.size) await Promise.allSettled([...legacyJobs]);
+  await Promise.all(
+    [...(view ? [view] : []), ...retiredViews].map((v) => v.whenQuiescent()),
+  );
+  await environmentPanel?.whenQuiescent();
+}
+function retainLegacy<T>(work: () => Promise<T>): Promise<T> {
+  const promise = Promise.resolve().then(work);
+  legacyJobs.add(promise);
+  void promise.finally(() => legacyJobs.delete(promise)).catch(() => {});
+  return promise;
+}
+function retireLegacy(owner: GaussianView) {
+  retiredViews.add(owner);
+  owner.dispose();
+  void owner
+    .whenReleased()
+    .then(() => retiredViews.delete(owner))
+    .catch((error) => {
+      // Keep failed retirement in the ledger; rejection is not release evidence.
+      if (general.mode === "legacy")
+        state("error", `旧渲染器释放失败：${String(error)}；原数据保留。`);
+    });
+}
+const general = createGeneralIntegration({
+  viewerHost: wrap as HTMLElement,
+  canSwitch: () => !measuring && !legacyInitializing,
+  cancelPending() {
+    cancel();
+    previewResult = null;
+  },
+  pause() {
+    legacyPaused = true;
+    cancelAnimationFrame(raf);
+    raf = 0;
+    view?.setInteractive(false);
+  },
+  resume() {
+    legacyPaused = false;
+    view?.setInteractive(!lost && !renderFailed);
+    if (!raf) raf = requestAnimationFrame(tick);
+    if (!lost && renderFailed && result) {
+      const next = result,
+        id = ++requestId;
+      void general
+        .runLegacyIO(
+          "activate",
+          () => retainLegacy(() => adopt(next, id, true)),
+          128 * 1024 ** 2,
+        )
+        .catch((e) => {
+          if (id === requestId && general.mode === "legacy")
+            state("error", `恢复失败：${String(e)}`);
+        });
+    }
+  },
+  getCamera: () =>
+    view?.getCamera() ?? { position: [6, 5, 6], target: [0, 0, 0] },
+  setCamera: (camera) => view?.setCamera(camera.position, camera.target),
+  residency: legacyResidency,
+  whenQuiescent: legacyQuiescent,
+  closeEnvironment: () => environmentPanel?.close(),
+  changed(mode) {
+    if (mode !== "legacy" && !legacyTitle)
+      legacyTitle = $("scene-title").textContent ?? "";
+    document.body.classList.toggle("general-mode", mode === "general");
+    document.body.classList.toggle("environment-mode", mode === "environment");
+    canvas.hidden = mode !== "legacy";
+    for (const element of wrap.querySelectorAll<HTMLElement>(
+      ".camera-bar,.scene-stats,.canvas-label",
+    ))
+      element.hidden = mode !== "legacy";
+    for (const element of document.querySelectorAll<HTMLElement>(
+      ".contrast,.measurement-panel",
+    )) {
+      if (mode !== "legacy") {
+        if (!originalInert.has(element))
+          originalInert.set(element, element.inert);
+        element.inert = true;
+      } else if (originalInert.has(element)) {
+        element.inert = originalInert.get(element)!;
+        originalInert.delete(element);
+      }
+    }
+    for (const element of document.querySelectorAll<HTMLElement>(
+      "#ground-credit,.measurement-panel,#build-time,#measurement-data,#scene-evidence",
+    )) {
+      if (mode !== "legacy") {
+        if (!originalHidden.has(element))
+          originalHidden.set(element, element.hidden);
+        element.hidden = true;
+      } else if (originalHidden.has(element)) {
+        element.hidden = originalHidden.get(element)!;
+        originalHidden.delete(element);
+      }
+    }
+    if (mode === "general")
+      $("scene-title").textContent = "自然场景 · 草稿预览";
+    else if (mode === "environment")
+      $("scene-title").textContent = "导入环境 · 待画质验收";
+    else {
+      if (legacyTitle) $("scene-title").textContent = legacyTitle;
+      legacyTitle = "";
+    }
+  },
+});
+const generalPanel = mountGeneralScenePanel(
+  $("general-scene-panel"),
+  wrap as HTMLElement,
+  general.panelPorts,
+);
+
 async function readLocalBytes(
   url: string,
   limit: number,
@@ -185,6 +341,12 @@ const createView = () =>
     },
   });
 export const workbench = {
+  general,
+  observe: () => ({
+    mode: general.mode,
+    legacyRafActive: raf !== 0 && !legacyPaused,
+    legacyFrames,
+  }),
   get view() {
     return view;
   },
@@ -199,6 +361,7 @@ export const workbench = {
   },
 };
 function state(kind: string, message: string) {
+  if (general.mode !== "legacy") return;
   status.dataset.state = kind;
   status.textContent = message;
   input("cancel").disabled = kind !== "building";
@@ -212,7 +375,7 @@ function state(kind: string, message: string) {
     !result ||
     Boolean(reviewController && reviewController.getState().phase !== "idle");
   input("contrast").disabled = kind === "building";
-  for (const b of document.querySelectorAll<HTMLButtonElement>("[data-camera]"))
+  for (const b of wrap.querySelectorAll<HTMLButtonElement>("[data-camera]"))
     b.disabled = kind === "building";
   view?.setInteractive(kind !== "building");
 }
@@ -233,10 +396,16 @@ function publishSceneEvidence() {
   });
 }
 function renderFrame(): boolean {
+  if (legacyPaused || general.mode !== "legacy") return false;
   try {
     view?.render();
+    lastDrawRequest = requestId;
+    lastDrawView = view;
+    legacyFrames++;
+    for (const check of [...legacyDrawWaiters]) check();
     return true;
   } catch (e) {
+    cancelWorker?.();
     renderFailed = true;
     sceneReview?.invalidate("渲染中断，预览已取消；上一版数据保留。");
     planner?.sceneFailed(requestId, String(e), true);
@@ -249,20 +418,34 @@ function renderFrame(): boolean {
     return false;
   }
 }
-async function waitForDisplayed(id: number) {
-  const deadline = performance.now() + 10000;
-  do {
-    if (id !== requestId || lost || renderFailed) return false;
-    if (!renderFrame()) return false;
-    if (view.isCurrentSceneDisplayed()) {
-      // The accumulator has adopted this exact scene; submit its first frame.
-      if (!renderFrame()) return false;
-      await new Promise(requestAnimationFrame);
-      return id === requestId && !lost && !renderFailed;
-    }
-    if (performance.now() > deadline) throw new Error("场景显示超时");
-    await new Promise(requestAnimationFrame);
-  } while (true);
+function waitForDisplayed(id: number): Promise<boolean> {
+  const owner = view;
+  return new Promise((resolve, reject) => {
+    const finish = (visible: boolean, error?: Error) => {
+      clearTimeout(timer);
+      legacyDrawWaiters.delete(check);
+      error ? reject(error) : resolve(visible);
+    };
+    const check = () => {
+      if (
+        id !== requestId ||
+        view !== owner ||
+        lost ||
+        renderFailed ||
+        general.mode !== "legacy"
+      )
+        return finish(false);
+      if (
+        lastDrawRequest === id &&
+        lastDrawView === owner &&
+        owner.isCurrentSceneDisplayed()
+      )
+        finish(true);
+    };
+    const timer = setTimeout(() => finish(false, Error("场景显示超时")), 10000);
+    legacyDrawWaiters.add(check);
+    check();
+  });
 }
 function readRecipe(): F0Recipe {
   return parseRecipe({
@@ -313,6 +496,7 @@ function populate(recipe: F0Recipe) {
   $("surface-note").hidden = !scanned;
 }
 function cancel() {
+  cancelWorker?.();
   sceneReview?.invalidate("已取消，上一版场景保留。");
   planner?.invalidate("构建与待审规划已取消。");
   assetPlanner?.invalidate("构建与待审规划已取消。");
@@ -320,15 +504,16 @@ function cancel() {
   view?.cancelPendingScene();
   worker?.terminate();
   worker = null;
+  for (const check of [...legacyDrawWaiters]) check();
   state("cancelled", result ? "已取消，保留上一版场景。" : "已取消。");
 }
 async function ensureRenderer(id: number): Promise<boolean> {
-  if (id !== requestId || lost) return false;
+  if (id !== requestId || lost || general.mode !== "legacy") return false;
   if (renderFailed) {
-    view.dispose();
+    retireLegacy(view);
     const recovered = await createView();
-    if (id !== requestId || lost) {
-      recovered.dispose();
+    if (id !== requestId || lost || general.mode !== "legacy") {
+      retireLegacy(recovered);
       return false;
     }
     view = recovered;
@@ -338,7 +523,13 @@ async function ensureRenderer(id: number): Promise<boolean> {
     if (result) await recovered.setScene(result.scene);
     // Superseded setScene calls resolve after disposing their temporary data.
     // A newer request may already own this renderer and its pending swap.
-    if (id !== requestId || lost || view !== recovered) return false;
+    if (
+      id !== requestId ||
+      lost ||
+      view !== recovered ||
+      general.mode !== "legacy"
+    )
+      return false;
     resize();
   }
   return true;
@@ -440,58 +631,86 @@ function cancelReview() {
     state(result ? "ready" : "empty", "预览已取消，上一版场景保留。");
   }
 }
-function buildReview(
-  recipe: RiverbankRecipe,
-  signal: AbortSignal,
-): Promise<BuildResult> {
-  signal.throwIfAborted();
-  if (lost) return Promise.reject(Error("图形上下文正在恢复，请稍后重试。"));
-  worker?.terminate();
-  worker = null;
-  const id = ++requestId;
-  view.cancelPendingScene();
-  planner?.invalidate("新的预览已开始，待审规划失效。");
-  assetPlanner?.invalidate("新的预览已开始，待审选材失效。");
-  state("building", "正在构建临时预览，上一版数据保留…");
-  document.dispatchEvent(new CustomEvent("scene-changing"));
+function buildWithWorker(
+  recipe: SceneRecipe,
+  id: number,
+  signal?: AbortSignal,
+): Promise<SceneBuildResult> {
   return new Promise((resolve, reject) => {
+    signal?.throwIfAborted();
+    if (id !== requestId || general.mode !== "legacy") {
+      reject(new DOMException("旧构建已取消。", "AbortError"));
+      return;
+    }
     const current = new Worker(new URL("./build.worker.ts", import.meta.url), {
       type: "module",
     });
     worker = current;
     const clean = () => {
       current.terminate();
-      if (worker === current) worker = null;
-      signal.removeEventListener("abort", abort);
+      signal?.removeEventListener("abort", abort);
+      if (worker === current) {
+        worker = null;
+        cancelWorker = null;
+      }
     };
     const abort = () => {
       clean();
-      if (id === requestId) requestId++;
-      reject(new DOMException("Preview cancelled", "AbortError"));
+      reject(new DOMException("旧构建已取消。", "AbortError"));
     };
-    signal.addEventListener("abort", abort, { once: true });
+    cancelWorker = abort;
+    signal?.addEventListener("abort", abort, { once: true });
     current.onmessage = ({ data }) => {
       clean();
-      if (id !== requestId || signal.aborted) {
-        reject(new DOMException("Preview superseded", "AbortError"));
+      if (id !== requestId || signal?.aborted || general.mode !== "legacy") {
+        reject(new DOMException("旧构建已过期。", "AbortError"));
         return;
       }
-      if (!data.ok) {
-        state("error", "预览构建失败，上一版场景保留。");
-        reject(Error(String(data.error)));
-        return;
-      }
-      resolve(data.result);
+      data.ok ? resolve(data.result) : reject(Error(String(data.error)));
     };
     current.onerror = (e) => {
       clean();
-      if (id === requestId) state("error", "预览构建失败，上一版场景保留。");
       reject(Error(e.message));
     };
-    current.postMessage({ requestId: id, recipe });
+    current.postMessage({
+      requestId: id,
+      recipe,
+      ...(recipe.schemaVersion === 2
+        ? {
+            definition: resolvePreparedDefinition(
+              catalogContext,
+              recipe.ground,
+            ),
+          }
+        : {}),
+    });
   });
 }
-async function stageReview(
+function buildReview(
+  recipe: RiverbankRecipe,
+  signal: AbortSignal,
+): Promise<BuildResult> {
+  signal.throwIfAborted();
+  if (!general.enterLegacy()) return Promise.reject(Error("请先结束测量。"));
+  cancelWorker?.();
+  const id = ++requestId;
+  view.cancelPendingScene();
+  planner?.invalidate("新的预览已开始，待审规划失效。");
+  assetPlanner?.invalidate("新的预览已开始，待审选材失效。");
+  state("building", "正在构建临时预览，上一版数据保留…");
+  document.dispatchEvent(new CustomEvent("scene-changing"));
+  return general.runLegacyIO(
+    "activate",
+    () =>
+      retainLegacy(async () => {
+        const next = (await buildWithWorker(recipe, id, signal)) as BuildResult;
+        previewResult = next;
+        return next;
+      }),
+    128 * 1024 ** 2,
+  );
+}
+async function stageReviewWork(
   next: BuildResult,
   signal: AbortSignal,
 ): Promise<StagedPreview> {
@@ -501,7 +720,7 @@ async function stageReview(
     throw new DOMException("Preview superseded", "AbortError");
   const owner = view,
     previousTitle = $("scene-title").textContent;
-  const selectedCamera = document.querySelector<HTMLButtonElement>(
+  const selectedCamera = wrap.querySelector<HTMLButtonElement>(
     "[data-camera].selected",
   )?.dataset.camera;
   let swap: Awaited<ReturnType<GaussianView["prepareScene"]>> | undefined,
@@ -521,9 +740,7 @@ async function stageReview(
     if (id === requestId && view === owner) {
       if (!swap) owner.cancelPendingScene();
       $("scene-title").textContent = previousTitle;
-      for (const b of document.querySelectorAll<HTMLButtonElement>(
-        "[data-camera]",
-      ))
+      for (const b of wrap.querySelectorAll<HTMLButtonElement>("[data-camera]"))
         b.classList.toggle("selected", b.dataset.camera === selectedCamera);
       if (!lost && !renderFailed)
         state(result ? "ready" : "empty", "预览已取消，上一版场景保留。");
@@ -549,9 +766,7 @@ async function stageReview(
       next.recipe.waterLevel,
       6,
     );
-    for (const b of document.querySelectorAll<HTMLButtonElement>(
-      "[data-camera]",
-    ))
+    for (const b of wrap.querySelectorAll<HTMLButtonElement>("[data-camera]"))
       b.classList.toggle("selected", b.dataset.camera === "overlap");
     if (!(await waitForDisplayed(id)) || !current())
       throw new DOMException("Preview not displayed", "AbortError");
@@ -573,69 +788,91 @@ async function stageReview(
     throw e;
   }
 }
+function stageReview(
+  next: BuildResult,
+  signal: AbortSignal,
+): Promise<StagedPreview> {
+  return general.runLegacyIO(
+    "activate",
+    () => retainLegacy(() => stageReviewWork(next, signal)),
+    128 * 1024 ** 2,
+  );
+}
 function generate(recipe?: SceneRecipe) {
+  if (!general.enterLegacy()) return;
   sceneReview?.invalidate("高级操作已开始，待审预览取消。");
   if (lost) {
     state("context-lost", "图形上下文丢失，等待恢复…");
     return;
   }
-  worker?.terminate();
-  worker = null;
+  cancelWorker?.();
   const id = ++requestId;
   view?.cancelPendingScene();
   document.dispatchEvent(new CustomEvent("scene-changing"));
   try {
-    const selected = recipe ?? readRecipe();
-    state("building", `正在构建版本 ${id}…`);
-    const current = new Worker(new URL("./build.worker.ts", import.meta.url), {
-      type: "module",
-    });
-    worker = current;
-    current.onmessage = async ({ data }) => {
-      current.terminate();
-      if (worker === current) worker = null;
-      if (data.requestId !== requestId) return;
-      if (!data.ok) {
-        planner?.sceneFailed(id, String(data.error));
-        assetPlanner?.sceneFailed(id, String(data.error));
-        state("error", `生成失败：${data.error}。上一版仍保留。`);
+    if (!recipe) {
+      const problem = invalidLegacyField();
+      if (problem) {
+        state("error", problem);
         return;
       }
-      try {
-        await adopt(data.result, id);
-      } catch (e) {
-        if (id === requestId) {
-          planner?.sceneFailed(id, String(e));
-          assetPlanner?.sceneFailed(id, String(e));
-          state("error", `渲染失败：${String(e)}`);
-        }
-      }
-    };
-    current.onerror = (e) => {
-      current.terminate();
-      if (id === requestId) {
-        worker = null;
-        planner?.sceneFailed(id, e.message);
-        assetPlanner?.sceneFailed(id, e.message);
-        state("error", `构建失败：${e.message}`);
-      }
-    };
-    current.postMessage({
-      requestId: id,
-      recipe: selected,
-      ...(selected.schemaVersion === 2
-        ? {
-            definition: resolvePreparedDefinition(
-              catalogContext,
-              selected.ground,
-            ),
-          }
-        : {}),
-    });
+    }
+    const selected = recipe ?? readRecipe();
+    state("building", `正在构建版本 ${id}…`);
+    void general
+      .runLegacyIO(
+        "activate",
+        () =>
+          retainLegacy(async () => {
+            const next = await buildWithWorker(selected, id);
+            await adopt(next, id);
+          }),
+        128 * 1024 ** 2,
+      )
+      .catch((e) => {
+        if (id !== requestId || general.mode !== "legacy") return;
+        planner?.sceneFailed(id, String(e));
+        assetPlanner?.sceneFailed(id, String(e));
+        state(
+          "error",
+          friendlyMessage(`生成失败：${String(e)}。上一版仍保留。`),
+        );
+      });
     return id;
   } catch (e) {
-    state("error", `${String(e)}。请修改后重试；画布保留上一版。`);
+    state(
+      "error",
+      friendlyMessage(`${String(e)}。请修改后重试；画布保留上一版。`),
+    );
   }
+}
+/** Names the first out-of-range legacy field instead of a raw validator error. */
+function invalidLegacyField(): string | null {
+  for (const el of document.querySelectorAll<HTMLInputElement>(
+    "#advanced-compat .fields input[type=number]",
+  )) {
+    // Water level is ignored when static water is off.
+    if (el.id === "waterLevel" && !input("water-enabled").checked) continue;
+    // Empty, out-of-range or (for whole-number fields) fractional values
+    // block a build. Decimal fields accept any in-range value, as the recipe
+    // does, so their step granularity is not enforced here.
+    const v = el.validity,
+      wholeNumber = el.step === "" || el.step === "1";
+    if (
+      el.value !== "" &&
+      !v.badInput &&
+      !v.rangeOverflow &&
+      !v.rangeUnderflow &&
+      !(wholeNumber && v.stepMismatch)
+    )
+      continue;
+    const label = el.closest("label")?.textContent?.trim() || el.id;
+    const range =
+      el.min !== "" && el.max !== "" ? `，范围 ${el.min}–${el.max}` : "";
+    el.focus();
+    return `请检查“${label}”：需要${wholeNumber ? "整数" : "数值"}${range}。画布保留上一版。`;
+  }
+  return null;
 }
 function desiredRenderDpr() {
   // Keep the benchmark reproducible while allowing bounded Retina detail in browsing.
@@ -647,6 +884,8 @@ function resize() {
   view?.resize(Math.max(1, r.width), Math.max(1, r.height), renderDpr);
 }
 function tick(time: number) {
+  raf = 0;
+  if (legacyPaused || general.mode !== "legacy") return;
   // Moving between displays or changing zoom can change DPR without changing layout.
   if (view && desiredRenderDpr() !== renderDpr) resize();
   if (!lost && !renderFailed && !environmentPanel?.active) renderFrame();
@@ -662,15 +901,26 @@ function tick(time: number) {
       Boolean(reviewController && reviewController.getState().phase !== "idle");
     lastStats = time;
   }
-  raf = requestAnimationFrame(tick);
+  if (!legacyPaused && general.mode === "legacy")
+    raf = requestAnimationFrame(tick);
 }
 $("generate").onclick = () => {
+  if (!general.enterLegacy()) return;
   // Supersede in-flight work even if new controls are invalid, without adding an idle version.
   if (status.dataset.state === "building") cancel();
-  void planner?.generateManual().catch((e) => state("error", String(e)));
+  const problem = invalidLegacyField();
+  if (problem) {
+    state("error", problem);
+    return;
+  }
+  void planner
+    ?.generateManual()
+    .catch((e) => state("error", friendlyMessage(String(e))));
 };
 $("cancel").onclick = cancel;
 $("clear").onclick = async () => {
+  if (!general.enterLegacy()) return;
+  await general.runLegacyIO("activate", async () => {}, 0);
   cancel();
   planner?.invalidate("场景已清空。", true);
   assetPlanner?.invalidate("场景已清空。", true);
@@ -755,10 +1005,37 @@ $("save").onclick = async () => {
     return;
   try {
     const saved = result;
-    const bytes = packBundle(await encodeSceneBundle(saved));
-    downloadBlob(
-      new Blob([new Uint8Array(bytes).buffer], { type: "application/zip" }),
-      `wetland-f0-${saved.recipe.seed}.zip`,
+    const sourceBytes = collectBuffers([saved]).reduce(
+      (n, b) => n + b.byteLength,
+      0,
+    );
+    await general.runLegacyIO(
+      "background",
+      (reserve) =>
+        retainLegacy(async () => {
+          const bytes = packBundle(await encodeSceneBundle(saved));
+          legacyRoots.add(bytes);
+          let copied: Uint8Array<ArrayBuffer> | undefined,
+            blob: Blob | undefined;
+          try {
+            reserve(2 * bytes.byteLength);
+            copied = new Uint8Array(bytes);
+            legacyRoots.add(copied);
+            reserve(copied.byteLength);
+            blob = new Blob([copied.buffer], { type: "application/zip" });
+            legacyDownloads.add(blob);
+            downloadBlob(blob, `wetland-f0-${saved.recipe.seed}.zip`);
+            const held = blob;
+            setTimeout(() => legacyDownloads.delete(held), 5100);
+          } catch (e) {
+            if (blob) legacyDownloads.delete(blob);
+            throw e;
+          } finally {
+            legacyRoots.delete(bytes);
+            if (copied) legacyRoots.delete(copied);
+          }
+        }),
+      4 * sourceBytes + 16 * 1024 ** 2,
     );
   } catch (e) {
     state("error", `保存失败：${String(e)}`);
@@ -767,6 +1044,8 @@ $("save").onclick = async () => {
 input("bundle-file").onchange = async () => {
   const file = input("bundle-file").files?.[0];
   if (!file) return;
+  if (!general.enterLegacy()) return;
+  cancelWorker?.();
   sceneReview?.invalidate("正在打开旧场景包，待审预览已取消。");
   planner?.invalidate("场景包不含规划证据，关联已清除。", true);
   assetPlanner?.invalidate("场景包不含规划证据，待审关联已清除。");
@@ -778,12 +1057,19 @@ input("bundle-file").onchange = async () => {
   state("building", "正在校验本地场景包…");
   try {
     if (file.size > 64 * 1024 * 1024) throw new Error("场景包超过64MiB");
-    const bundle = unpackBundle(new Uint8Array(await file.arrayBuffer())),
-      next = await decodeSceneBundle(bundle.manifest, bundle.files);
-    if (id !== requestId) return;
-    await adopt(next, id, true);
-    if (id === requestId && next.recipe.schemaVersion === 1)
-      populate(next.recipe);
+    await general.runLegacyIO(
+      "activate",
+      () =>
+        retainLegacy(async () => {
+          const bundle = unpackBundle(new Uint8Array(await file.arrayBuffer())),
+            next = await decodeSceneBundle(bundle.manifest, bundle.files);
+          if (id !== requestId) return;
+          await adopt(next, id, true);
+          if (id === requestId && next.recipe.schemaVersion === 1)
+            populate(next.recipe);
+        }),
+      6 * file.size + 64 * 1024 ** 2,
+    );
   } catch (e) {
     if (id === requestId)
       state("error", `导入失败：${String(e)}。上一版仍保留。`);
@@ -793,7 +1079,7 @@ input("bundle-file").onchange = async () => {
 };
 for (const control of document.querySelectorAll<
   HTMLInputElement | HTMLSelectElement
->(".sidebar input:not([type=file]),.sidebar select"))
+>("#advanced-compat input:not([type=file]),#advanced-compat select"))
   control.addEventListener("input", () => {
     $("dirty").textContent = "参数已修改；点击生成后应用。";
     planner?.recipeEdited();
@@ -820,9 +1106,7 @@ $("contrast").onchange = () => {
   view.setBackground(input("contrast").checked ? 0xd91b78 : 0xe9ecdf);
   document.dispatchEvent(new CustomEvent("scene-changing"));
 };
-for (const button of document.querySelectorAll<HTMLButtonElement>(
-  "[data-camera]",
-))
+for (const button of wrap.querySelectorAll<HTMLButtonElement>("[data-camera]"))
   button.onclick = () => {
     const shown = previewResult ?? result;
     if (!shown) return;
@@ -833,12 +1117,13 @@ for (const button of document.querySelectorAll<HTMLButtonElement>(
       shown.recipe.waterLevel,
       shown.scene.ground ? 6 : undefined,
     );
-    for (const b of document.querySelectorAll("[data-camera]"))
+    for (const b of wrap.querySelectorAll("[data-camera]"))
       b.classList.toggle("selected", b === button);
   };
 canvas.addEventListener("webglcontextlost", (e) => {
   e.preventDefault();
   lost = true;
+  cancelWorker?.();
   sceneReview?.invalidate("图形上下文丢失，预览取消；恢复时仅加载已使用场景。");
   view?.cancelPendingScene();
   planner?.invalidate("图形上下文丢失，规划关联已清除。", true);
@@ -852,29 +1137,46 @@ canvas.addEventListener("webglcontextlost", (e) => {
 canvas.addEventListener("webglcontextrestored", () => {
   lost = false;
   renderFailed = true;
+  if (general.mode !== "legacy") return;
   const previous = result;
   if (previous) {
     const id = ++requestId;
     state("building", "正在恢复上一版场景…");
-    void adopt(previous, id, true).catch((e) => {
-      if (id === requestId && !lost) state("error", `恢复失败：${e}`);
-    });
+    void general
+      .runLegacyIO(
+        "activate",
+        () => retainLegacy(() => adopt(previous, id, true)),
+        128 * 1024 ** 2,
+      )
+      .catch((e) => {
+        if (id === requestId && !lost) state("error", `恢复失败：${e}`);
+      });
   } else generate(defaultRecipe);
 });
 window.addEventListener("beforeunload", () => {
+  void generalPanel.dispose();
+  void general.dispose();
   environmentPanel?.dispose();
   sceneReview?.dispose();
   cancelAnimationFrame(raf);
+  cancelWorker?.();
   worker?.terminate();
   view?.dispose();
 });
 try {
-  catalogContext = await parseCatalogContext(
-    JSON.parse(
-      new TextDecoder("utf-8", { fatal: true }).decode(
-        await readLocalBytes("/api/planner/assets/catalog", 1048576),
+  catalogContext = await general.runLegacyIO(
+    "background",
+    () =>
+      retainLegacy(async () =>
+        parseCatalogContext(
+          JSON.parse(
+            new TextDecoder("utf-8", { fatal: true }).decode(
+              await readLocalBytes("/api/planner/assets/catalog", 1048576),
+            ),
+          ),
+        ),
       ),
-    ),
+    4 * 1024 ** 2,
   );
   planner = mountPlanner($("planner"), {
     catalogContext,
@@ -902,12 +1204,16 @@ try {
     },
     catalogContext,
   );
-  view = await createView();
-  view.setInteractive(true);
+  view = await general.runLegacyIO(
+    "background",
+    () => retainLegacy(createView),
+    8 * 1024 ** 2,
+  );
+  view.setInteractive(general.mode === "legacy");
   view.setBackground(0xe9ecdf);
   new ResizeObserver(resize).observe(wrap);
   resize();
-  raf = requestAnimationFrame(tick);
+  if (!legacyPaused) raf = requestAnimationFrame(tick);
   populate(
     query.get("surface") === "baseline"
       ? defaultRecipe
@@ -921,7 +1227,8 @@ try {
           }
         : { ...riversideRecipe, algorithmVersion: "f0-riverside-grass-v2" },
   );
-  generate();
+  legacyInitializing = false;
+  if (general.mode === "legacy") generate();
   if (reviewEnabled) {
     reviewController = createPreviewController({
       build: buildReview,
@@ -962,28 +1269,31 @@ try {
       catalogContext,
     );
   }
-  const suspended = new Map<HTMLElement, boolean>();
-  let originalSceneTitle = "";
-  environmentPanel = mountEnvironmentPanel($("environment-panel"), wrap as HTMLElement, {
-    enter() {
-      if (measuring || lost || renderFailed || status.dataset.state !== "ready" ||
-          (reviewController && reviewController.getState().phase !== "idle"))
-        throw Error("请先结束当前构建、审阅或测量，再预览环境。");
-      for (const element of document.querySelectorAll<HTMLElement>("#advanced-compat, #scene-review, .camera-bar, .measurement-panel, .contrast")) {
-        suspended.set(element, element.inert); element.inert = true;
-      }
-      document.body.classList.add("environment-mode");
-      originalSceneTitle = $("scene-title").textContent ?? "";
-      $("scene-title").textContent = "导入环境 · 待画质验收";
-      view.setInteractive(false);
+  environmentPanel = mountEnvironmentPanel(
+    $("environment-panel"),
+    wrap as HTMLElement,
+    {
+      runIO: (kind, work, reservation) =>
+        general.runLegacyIO(kind, work, reservation, "environment"),
+      enter() {
+        if (general.mode !== "environment")
+          throw Error("环境尚未取得模式使用权。");
+        view?.setInteractive(false);
+      },
+      leave() {
+        general.environmentClosed();
+      },
     },
-    leave() {
-      for (const [element, inert] of suspended) element.inert = inert;
-      suspended.clear(); document.body.classList.remove("environment-mode");
-      $("scene-title").textContent = originalSceneTitle;
-      view?.setInteractive(!lost && !renderFailed);
-    },
-  });
+  );
 } catch (e) {
-  state("error", `无法启动目录或WebGL：${String(e)}`);
+  const text = String(e);
+  state(
+    "error",
+    /本机素材接口 HTTP 404/.test(text)
+      ? "无法启动：没有找到本机素材接口。请用“启动湿地项目”或 npm run dev 打开项目，不要直接打开构建后的静态文件。"
+      : friendlyMessage(`无法启动目录或WebGL：${text}`),
+  );
+} finally {
+  // Failure also releases entry to general scenes; its own renderer is independent.
+  legacyInitializing = false;
 }

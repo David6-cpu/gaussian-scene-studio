@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
-import { realpathSync } from "node:fs";
-import { resolve, relative, isAbsolute } from "node:path";
+import { existsSync, realpathSync } from "node:fs";
+import { dirname, resolve, relative, isAbsolute } from "node:path";
 import { loadLibrary } from "../general-scene/asset-library-server.ts";
 import {
   createCatalogView,
@@ -12,6 +12,9 @@ import {
   planRequest,
   parsePlanningRequest,
   type PlanningRequest,
+  type PlanningOutcome,
+  type GeneralPlanningEvent,
+  type PlanningPhase,
 } from "../general-scene/planner.ts";
 import {
   abortable,
@@ -20,6 +23,7 @@ import {
   type GeneralTransport,
   type TokenCounter,
 } from "../general-scene/model-transport.ts";
+import { GENERAL_LIMITS } from "../general-scene/core.ts";
 import { record } from "../data-validation";
 import { proposalSchema } from "./contract";
 import {
@@ -242,6 +246,79 @@ function send(res: ServerResponse, status: number, body: unknown) {
   });
   res.end(JSON.stringify(body));
 }
+const planningFailure = (
+  request: PlanningRequest,
+  code: string,
+  message: string,
+): PlanningOutcome => ({
+  ok: false,
+  request,
+  query: null,
+  inputs: [],
+  partial: { intent: null, draft: null, evidence: [] },
+  issues: [{ code, path: "", message }],
+  mode: "manual",
+});
+function acceptsPlanningStream(accept: string) {
+  return accept.split(",").some((range) => {
+    const [media, ...parameters] = range.split(";");
+    if (media.trim().toLowerCase() !== "application/x-ndjson") return false;
+    return parameters.every((parameter) => {
+      const quality = /^\s*q\s*=\s*(.*?)\s*$/i.exec(parameter);
+      if (!quality) return true;
+      const value = Number(quality[1]);
+      return value > 0 && value <= 1;
+    });
+  });
+}
+/** One bounded stream on the existing POST. A final delivery failure is never truncated success. */
+function planningStream(res: ServerResponse, input: PlanningRequest) {
+  const binding = {
+    operationId: input.operationId,
+    baseRevisionId: input.baseRevisionId,
+  };
+  let bytesSent = 0,
+    finished = false;
+  const encode = (event: GeneralPlanningEvent) =>
+    Buffer.from(JSON.stringify(event) + "\n", "utf8");
+  const headers = () => {
+    if (!res.headersSent)
+      res.writeHead(200, {
+        "content-type": "application/x-ndjson; charset=utf-8",
+        "cache-control": "no-store",
+        "x-content-type-options": "nosniff",
+      });
+  };
+  return {
+    phase(phase: PlanningPhase) {
+      if (finished || res.destroyed || res.writableEnded) return;
+      const bytes = encode({ type: "phase", ...binding, phase });
+      // Three bounded identities/phase names leave ample room for a failure outcome.
+      if (bytesSent + bytes.byteLength > GENERAL_LIMITS.maxJsonBytes) return;
+      headers();
+      bytesSent += bytes.byteLength;
+      res.write(bytes);
+    },
+    finish(outcome: PlanningOutcome) {
+      if (finished || res.destroyed || res.writableEnded) return;
+      let bytes = encode({ type: "final", ...binding, outcome });
+      if (bytesSent + bytes.byteLength > GENERAL_LIMITS.maxJsonBytes)
+        bytes = encode({
+          type: "final",
+          ...binding,
+          outcome: planningFailure(
+            input,
+            "response-budget",
+            "完整规划结果超过2MiB响应上限，未交付完整结果；保留输入，可使用手工模式。",
+          ),
+        });
+      finished = true;
+      headers();
+      bytesSent += bytes.byteLength;
+      res.end(bytes);
+    },
+  };
+}
 async function readBody(req: IncomingMessage, maxBytes = 8192) {
   const chunks: Buffer[] = [];
   let size = 0;
@@ -260,12 +337,17 @@ async function readBody(req: IncomingMessage, maxBytes = 8192) {
       : new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks)),
   );
 }
+/** Bundled, redistributable starter examples (see docs/validation/starter-library.md). */
+export const STARTER_LIBRARY_INDEX = "starter-library/index.json";
 /** Server-owned startup configuration. A request can never supply or change this path. */
 export function createGeneralLibrarySource(
   indexPath?: string,
   projectRoot = process.cwd(),
 ): (signal: AbortSignal) => Promise<AssetLibrary> {
-  if (!indexPath) {
+  // Without a configured catalog, fall back to the bundled starter examples so
+  // a fresh install can generate a scene without the private local library.
+  const starter = resolve(projectRoot, STARTER_LIBRARY_INDEX);
+  if (!indexPath && !existsSync(starter)) {
     const empty = createCatalogView([], []).then((view) =>
       makeAssetLibrary(view, async () => {
         throw Error("没有配置通用场景素材库");
@@ -273,8 +355,8 @@ export function createGeneralLibrarySource(
     );
     return (signal) => abortable(empty, signal);
   }
-  const base = resolve(projectRoot, ".local"),
-    index = resolve(projectRoot, indexPath);
+  const base = resolve(projectRoot, indexPath ? ".local" : dirname(starter)),
+    index = indexPath ? resolve(projectRoot, indexPath) : starter;
   const contained = (root: string, target: string) => {
     const child = relative(root, target);
     return (
@@ -289,7 +371,11 @@ export function createGeneralLibrarySource(
       !contained(base, index) ||
       !contained(realpathSync(base), realpathSync(index))
     )
-      throw Error("General catalog must be under project .local");
+      throw Error(
+        indexPath
+          ? "General catalog must be under project .local"
+          : "Starter library must stay inside starter-library",
+      );
   };
   check();
   return async (signal) => {
@@ -530,6 +616,7 @@ export function createPlannerMiddleware(
       : null;
     const intakeTimeout = setTimeout(() => req.destroy(), 5000);
     let generalInput: PlanningRequest | null = null;
+    let stream: ReturnType<typeof planningStream> | null = null;
     try {
       const value = isGeneral
         ? await abortable(readBody(req, 65536), controller.signal)
@@ -538,6 +625,8 @@ export function createPlannerMiddleware(
         clearTimeout(intakeTimeout);
         const input = parsePlanningRequest(value);
         generalInput = input;
+        if (acceptsPlanningStream(req.headers.accept ?? ""))
+          stream = planningStream(res, input);
         const library = await abortable(
           generalLibrary(controller.signal),
           controller.signal,
@@ -552,20 +641,19 @@ export function createPlannerMiddleware(
         Object.defineProperty(guarded, "provenance", {
           value: generalTransport.provenance ?? "constructed",
         });
-        send(
-          res,
-          200,
-          await planRequest(
-            input,
-            {
-              library,
-              transport: guarded,
-              countTokens: generalCountTokens,
-              now: Date.now,
-            },
-            controller.signal,
-          ),
+        const outcome = await planRequest(
+          input,
+          {
+            library,
+            transport: guarded,
+            countTokens: generalCountTokens,
+            now: Date.now,
+            onPhase: stream?.phase,
+          },
+          controller.signal,
         );
+        if (stream) stream.finish(outcome);
+        else send(res, 200, outcome);
         return;
       }
       if (req.url === "/api/planner/review/requirements-v2") {
@@ -645,23 +733,15 @@ export function createPlannerMiddleware(
       );
       send(res, 200, draft);
     } catch (error) {
-      if (generalInput)
-        send(res, 200, {
-          ok: false,
-          request: generalInput,
-          query: null,
-          inputs: [],
-          partial: { intent: null, draft: null, evidence: [] },
-          issues: [
-            {
-              code: "catalog-unavailable",
-              path: "",
-              message: `${errorText(error)}；保留输入，可使用手工模式。`,
-            },
-          ],
-          mode: "manual",
-        });
-      else if (isGeneral || !controller.signal.aborted)
+      if (generalInput) {
+        const outcome = planningFailure(
+          generalInput,
+          "catalog-unavailable",
+          `${errorText(error)}；保留输入，可使用手工模式。`,
+        );
+        if (stream) stream.finish(outcome);
+        else send(res, 200, outcome);
+      } else if (isGeneral || !controller.signal.aborted)
         send(res, 400, { error: errorText(error) });
     } finally {
       clearTimeout(intakeTimeout);

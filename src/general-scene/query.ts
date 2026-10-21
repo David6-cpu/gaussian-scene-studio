@@ -17,7 +17,19 @@ import {
   type Transform,
 } from "./core.ts";
 
+// User-facing name for an asset category; unknown categories keep their ID.
+const CATEGORY_LABELS: Record<string, string> = {
+  rock: "石头",
+  grass: "低草",
+  reed: "芦苇",
+  tree: "树",
+  ground: "场地",
+  surface: "地形与水面样式",
+};
+const categoryLabel = (name: string) => CATEGORY_LABELS[name] ?? name;
+
 /** Metadata summaries only. File paths, proxies and license documents never enter model context. */
+
 export type Candidate = {
   assetRef: AssetRef;
   digest: string;
@@ -402,7 +414,7 @@ export function queryCandidates(
       out.missing.push({
         key: slot.slotId,
         required: slot.required,
-        reason: `本地库没有符合${slot.category}及来源、许可、准入、能力和预算要求的素材。`,
+        reason: `本地库没有符合要求的${categoryLabel(slot.category)}素材（需同时满足来源、许可、准入、能力和预算）。`,
       });
     }
   }

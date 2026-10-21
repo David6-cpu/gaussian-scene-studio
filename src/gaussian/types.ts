@@ -1,3 +1,4 @@
+import type { Residency } from "../general-scene/controller";
 import type { PreparedGroundDefinition } from "../io/prepared-ground";
 export type Vec3 = readonly [number, number, number];
 export type Quat = readonly [number, number, number, number];
@@ -141,6 +142,9 @@ export interface SceneSwap {
   rollback(): void;
 }
 export interface GaussianView {
+  residency(): Residency;
+  whenQuiescent(): Promise<void>;
+  whenReleased(): Promise<void>;
   prepareScene(scene: BuiltScene): Promise<SceneSwap>;
   setScene(scene: BuiltScene): Promise<void>;
   cancelPendingScene(): void;

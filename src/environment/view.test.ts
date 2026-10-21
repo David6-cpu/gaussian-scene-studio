@@ -6,6 +6,11 @@ import type { EnvironmentAsset } from "./asset";
 const state = vi.hoisted(() => ({
   sourceReady: Promise.resolve() as Promise<unknown>,
   meshReady: Promise.resolve() as Promise<unknown>,
+  sortReady: Promise.resolve() as Promise<unknown>,
+  sorting: false,
+  disposalError: null as Error | null,
+  sourceDisposalError: null as Error | null,
+  arrays: [new Uint32Array(8), new Uint32Array(8)],
   sources: [] as { dispose: ReturnType<typeof vi.fn> }[],
   meshes: [] as { dispose: ReturnType<typeof vi.fn> }[],
 }));
@@ -26,22 +31,54 @@ vi.mock("three/addons/controls/OrbitControls.js", () => ({
   },
 }));
 vi.mock("../gaussian/spark-lifecycle", () => ({
-  deferredSparkDisposal: (_spark: unknown, after: () => void) => async () =>
-    after(),
+  deferredSparkDisposal: (_spark: unknown, after: () => void) => {
+    let released = false,
+      closing = false;
+    let work: Promise<void> | undefined;
+    return Object.assign(
+      () => {
+        closing = true;
+        return (work ??= state.sortReady.then(() => {
+          if (state.disposalError) throw state.disposalError;
+          after();
+          released = true;
+          closing = false;
+        }));
+      },
+      {
+        activity: () => ({ busy: state.sorting || closing, released }),
+        whenQuiescent: async () => {
+          await state.sortReady;
+        },
+      },
+    );
+  },
   releaseGeneratorMaterial: vi.fn(),
 }));
 vi.mock("@sparkjsdev/spark", () => ({
   SplatFileType: { SPZ: "spz" },
   SparkRenderer: class extends Object3D {
+    readback32 = new Uint32Array(0);
+    orderingTexture = null;
+    current = { mapping: [], readback: null, readbackSplats: [] };
+    accumulators = [];
+    uniforms = {};
+
     display = {
       get mapping() {
         return state.meshes.map((node) => ({ node, count: 3 }));
       },
+      set mapping(_value) {},
     };
   },
   ExtSplats: class {
     initialized = state.sourceReady;
-    dispose = vi.fn();
+    extArrays = state.arrays;
+    extra = {};
+    dispose = vi.fn(() => {
+      if (state.sourceDisposalError) throw state.sourceDisposalError;
+      this.extArrays = [];
+    });
     getNumSplats = () => 3;
     getNumSh = () => 3;
     getSplat = () => ({ center: new Vector3() });
@@ -96,6 +133,11 @@ beforeEach(() => {
   state.meshes = [];
   state.sourceReady = Promise.resolve();
   state.meshReady = Promise.resolve();
+  state.sortReady = Promise.resolve();
+  state.sorting = false;
+  state.disposalError = null;
+  state.sourceDisposalError = null;
+  state.arrays = [new Uint32Array(8), new Uint32Array(8)];
   view = createEnvironmentView(
     Object.assign(new EventTarget(), {
       width: 1,
@@ -189,3 +231,147 @@ test.each(["abort", "dispose", "replace"] as const)(
     expect(vi.getTimerCount()).toBe(0);
   },
 );
+
+test.each(["source", "mesh"] as const)(
+  "%s cancellation keeps the real initializer reserved until cleanup",
+  async (kind) => {
+    const wait = deferred(),
+      abort = new AbortController();
+    state[kind === "source" ? "sourceReady" : "meshReady"] = wait.promise;
+    const input = { ...asset, spz: new Uint8Array(123) };
+    const work = view.stage(input, abort.signal).catch(() => {});
+    await flush();
+    expect(view.residency().buffers).toContain(input.spz.buffer);
+    expect(view.residency().extraBytes).toBeGreaterThan(8 * 1024 ** 2);
+    abort.abort();
+    await work;
+    let quiet = false,
+      released = false;
+    void view.whenQuiescent().then(() => {
+      quiet = true;
+    });
+    view.dispose();
+    void view.whenReleased().then(() => {
+      released = true;
+    });
+    await flush();
+    expect(view.residency().settled).toBe(false);
+    expect(view.residency().buffers).toContain(input.spz.buffer);
+    expect(quiet).toBe(false);
+    expect(released).toBe(false);
+    wait.resolve();
+    await view.whenReleased();
+    expect(view.residency()).toEqual({
+      buffers: [],
+      extraBytes: 0,
+      settled: true,
+    });
+  },
+);
+
+test("resident source buffers use backing identity and held renderer disposal does not report zero", async () => {
+  const shared = new ArrayBuffer(128);
+  state.arrays = [
+    new Uint32Array(shared, 0, 8),
+    new Uint32Array(shared, 32, 8),
+  ];
+  const input = {
+    ...asset,
+    spz: new Uint8Array(123),
+    transform: {
+      scale: 1,
+      offset: 0,
+      flipY: false,
+      flipSource: "metadata" as const,
+      policy: "marble-raw-three-v1" as const,
+    },
+  };
+  const stage = await view.stage(input, new AbortController().signal);
+  stage.commit();
+  expect(view.residency().buffers.filter((b) => b === shared)).toHaveLength(1);
+  expect(view.residency().buffers).toContain(input.spz.buffer);
+  const wait = deferred();
+  state.sortReady = wait.promise;
+  state.sorting = true;
+  view.dispose();
+  let released = false;
+  const release = view.whenReleased().then(() => {
+    released = true;
+  });
+  await flush();
+  expect(released).toBe(false);
+  expect(view.residency().extraBytes).toBeGreaterThanOrEqual(8 * 1024 ** 2);
+  expect(view.residency().settled).toBe(false);
+  state.sorting = false;
+  wait.resolve();
+  await release;
+  expect(view.residency()).toEqual({
+    buffers: [],
+    extraBytes: 0,
+    settled: true,
+  });
+});
+
+test("a failed renderer disposal rejects release and keeps its reservation visible", async () => {
+  state.disposalError = Error("GPU cleanup failure");
+  view.dispose();
+  let failure: unknown;
+  void view.whenReleased().catch((error) => {
+    failure = error;
+  });
+  await flush();
+  expect(failure).toBe(state.disposalError);
+  await expect(view.whenQuiescent()).rejects.toThrow("GPU cleanup failure");
+  expect(view.residency().extraBytes).toBeGreaterThanOrEqual(8 * 1024 ** 2);
+});
+
+test("a late source cleanup failure terminates release and keeps the failed owner", async () => {
+  const wait = deferred(),
+    abort = new AbortController();
+  state.sourceReady = wait.promise;
+  const input = { ...asset, spz: new Uint8Array(123) };
+  const work = view.stage(input, abort.signal).catch(() => {});
+  await flush();
+  abort.abort();
+  await work;
+  view.dispose();
+  let failure: unknown;
+  void view.whenReleased().catch((error) => {
+    failure = error;
+  });
+  state.sourceDisposalError = Error("late source cleanup failure");
+  wait.resolve();
+  await flush();
+  expect(failure).toBe(state.sourceDisposalError);
+  await expect(view.whenQuiescent()).rejects.toThrow(
+    "late source cleanup failure",
+  );
+  expect(view.residency().buffers).toContain(input.spz.buffer);
+  expect(view.residency().extraBytes).toBeGreaterThan(0);
+});
+
+test("synchronous source cleanup failure becomes a failed release without erasing residency", async () => {
+  const input = {
+    ...asset,
+    spz: new Uint8Array(123),
+    transform: {
+      scale: 1,
+      offset: 0,
+      flipY: false,
+      flipSource: "metadata" as const,
+      policy: "marble-raw-three-v1" as const,
+    },
+  };
+  const stage = await view.stage(input, new AbortController().signal);
+  stage.commit();
+  state.sourceDisposalError = Error("source cleanup failure");
+  expect(() => view.dispose()).not.toThrow();
+  let failure: unknown;
+  void view.whenReleased().catch((error) => {
+    failure = error;
+  });
+  await flush();
+  expect(failure).toBe(state.sourceDisposalError);
+  await expect(view.whenQuiescent()).rejects.toThrow("source cleanup failure");
+  expect(view.residency().buffers).toContain(input.spz.buffer);
+});

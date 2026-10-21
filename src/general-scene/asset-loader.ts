@@ -1,4 +1,8 @@
-import { utils } from "@sparkjsdev/spark";
+import {
+  decodeExtRgb,
+  decodeExtSplat,
+  isValidExtSplat,
+} from "../gaussian/ext-decode.ts";
 import { assertGaussianBuffer } from "../gaussian/validate.ts";
 import type { GroundArrays } from "../gaussian/types.ts";
 import { SH3_KEYS } from "../io/sh3-variant.ts";
@@ -119,29 +123,13 @@ export async function loadAsset(
     for (let start = 0; start < count; start += 512) {
       await turn(signal);
       for (let i = start; i < Math.min(start + 512, count); i++) {
-        const s = utils.decodeExtSplat([arrays.ext0, arrays.ext1], i);
-        if (
-          [
-            ...s.center.toArray(),
-            ...s.scales.toArray(),
-            ...s.quaternion.toArray(),
-            s.color.r,
-            s.color.g,
-            s.color.b,
-            s.opacity,
-          ].some((x) => !Number.isFinite(x)) ||
-          s.scales.toArray().some((x) => x <= 0) ||
-          Math.abs(s.quaternion.length() - 1) > 0.01 ||
-          s.opacity < 0 ||
-          s.opacity > 1
-        )
+        if (!isValidExtSplat(decodeExtSplat([arrays.ext0, arrays.ext1], i)))
           throw Error("Invalid encoded Gaussian");
         for (let k = 0; k < 15; k++) {
-          const c = utils.decodeExtRgb(
+          const c = decodeExtRgb(
             arrays[SH3_KEYS[2 + Math.floor(k / 4)]][i * 4 + (k % 4)],
           );
-          if (![c.r, c.g, c.b].every(Number.isFinite))
-            throw Error("Invalid encoded SH");
+          if (!c.every(Number.isFinite)) throw Error("Invalid encoded SH");
         }
       }
     }

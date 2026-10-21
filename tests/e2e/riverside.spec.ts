@@ -8,7 +8,7 @@ test("Riverside trial renders SH3, confirms planning, and survives self-containe
   page.on("pageerror", (e) => errors.push(String(e)));
   const evidence = async () =>
     JSON.parse((await page.locator("#scene-evidence").textContent())!);
-  await page.goto("/");
+  await page.goto("/?advanced");
   await expect(page.locator("#status")).toHaveAttribute("data-state", "ready");
   await page.locator("#algorithmVersion").selectOption("f0-riverside-v1");
   await page.locator("#generate").click();
@@ -83,7 +83,7 @@ test("missing Riverside data gives an actionable error and the baseline can stil
   await page.route("**/assets/riverside-ground-v1/**", (route) =>
     route.fulfill({ status: 404, body: "missing" }),
   );
-  await page.goto("/");
+  await page.goto("/?advanced");
   await expect(page.locator("#status")).toHaveAttribute("data-state", "error");
   await expect(page.locator("#status")).toContainText("Riverside");
   await page.locator("#algorithmVersion").selectOption("f0-v1");
@@ -139,7 +139,7 @@ test("cancel aborts a pending ground fetch and retains the displayed baseline", 
 test("new planning can replace invalid manual fields without losing the selected ground", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?advanced");
   await expect(page.locator("#status")).toHaveAttribute("data-state", "ready");
   await page.locator("#seed").fill("-1");
   await page.locator("#plan-demo").click();

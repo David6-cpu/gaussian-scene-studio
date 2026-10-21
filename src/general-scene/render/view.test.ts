@@ -153,7 +153,7 @@ const deferred = () => {
 const flush = async () => {
   for (let i = 0; i < 30; i++) await Promise.resolve();
 };
-let view: GeneralView;
+let view: GeneralView, canvas: HTMLCanvasElement;
 beforeEach(async () => {
   vi.useFakeTimers();
   state.sourceReady = Promise.resolve();
@@ -166,14 +166,13 @@ beforeEach(async () => {
   state.lost = false;
   state.manualMapping = null;
   state.lastDrawn = [];
-  view = await createGeneralView(
-    Object.assign(new EventTarget(), {
-      clientWidth: 1280,
-      clientHeight: 720,
-      width: 1280,
-      height: 720,
-    }) as HTMLCanvasElement,
-  );
+  canvas = Object.assign(new EventTarget(), {
+    clientWidth: 1280,
+    clientHeight: 720,
+    width: 1280,
+    height: 720,
+  }) as HTMLCanvasElement;
+  view = await createGeneralView(canvas);
 });
 afterEach(async () => {
   await view.dispose();
@@ -187,6 +186,119 @@ const install = async (p = packet()) => {
   s.commit();
   return s;
 };
+test("a committed view becomes unavailable on context loss and rejects further preparation", async () => {
+  await install();
+  expect(view.activity()).toEqual({ preparing: false, available: true });
+  const event = new Event("webglcontextlost", { cancelable: true });
+  canvas.dispatchEvent(event);
+  expect(event.defaultPrevented).toBe(true);
+  expect(view.activity()).toEqual({ preparing: false, available: false });
+  await expect(
+    view.prepare(packet("candidate"), new AbortController().signal),
+  ).rejects.toMatchObject({ name: "AbortError" });
+});
+
+test("dispose makes a view unavailable before renderer disposal settles", async () => {
+  await install();
+  expect(view.activity().available).toBe(true);
+  const wait = deferred();
+  state.sortReady = wait.promise;
+  const closing = view.dispose();
+  expect(view.activity()).toEqual({ preparing: false, available: false });
+  expect(view.stats().ownedBytes).toBeGreaterThan(0);
+  wait.resolve();
+  await closing;
+  expect(view.activity()).toEqual({ preparing: false, available: false });
+});
+
+test("preparation settlement spans source upload, mesh initialization, and the outer prepare", async () => {
+  expect(view.activity()).toEqual({ preparing: false, available: true });
+  await view.whenPreparationSettled();
+  const source = deferred(),
+    mesh = deferred();
+  state.sourceReady = source.promise;
+  state.meshReady = mesh.promise;
+  const work = view.prepare(packet(), new AbortController().signal);
+  let settled = false;
+  const settlement = view.whenPreparationSettled().then(() => {
+    expect(view.activity()).toMatchObject({ preparing: false });
+    settled = true;
+  });
+  expect(view.activity()).toMatchObject({ preparing: true });
+  source.resolve();
+  await flush();
+  expect(state.meshes).toHaveLength(1);
+  expect(view.activity()).toMatchObject({ preparing: true });
+  expect(settled).toBe(false);
+  mesh.resolve();
+  await settlement;
+  const swap = await work;
+  expect(settled).toBe(true);
+  swap.activate();
+  expect(swap.isUsable()).toBe(false);
+  view.render();
+  expect(swap.isUsable()).toBe(true);
+  swap.commit();
+  expect(view.stats().activeSplats).toBe(1);
+});
+
+test.each([
+  ["source", "cancel"],
+  ["mesh", "cancel"],
+  ["source", "dispose"],
+  ["mesh", "dispose"],
+] as const)(
+  "preparation settlement waits for late %s cleanup after %s",
+  async (kind, action) => {
+    await install();
+    const oldSource = state.sources[0],
+      oldCamera = view.getCamera(),
+      wait = deferred(),
+      abort = new AbortController();
+    state[kind === "source" ? "sourceReady" : "meshReady"] = wait.promise;
+    const work = view.prepare(packet("candidate"), abort.signal);
+    const rejected = expect(work).rejects.toMatchObject({ name: "AbortError" });
+    await flush();
+    let settled = false;
+    const settlement = view.whenPreparationSettled().then(() => {
+      settled = true;
+    });
+    expect(view.activity()).toMatchObject({ preparing: true });
+    if (action === "cancel") abort.abort();
+    else await view.dispose();
+    await rejected;
+    let lateWaiterSettled = false;
+    const lateSettlement = view.whenPreparationSettled().then(() => {
+      lateWaiterSettled = true;
+    });
+    await flush();
+    expect(settled).toBe(false);
+    expect(lateWaiterSettled).toBe(false);
+    expect(view.activity()).toEqual({
+      preparing: true,
+      available: action === "cancel",
+    });
+    if (action === "cancel") {
+      expect(view.stats().instanceCount).toBe(1);
+      expect(view.getCamera()).toEqual(oldCamera);
+      expect(oldSource.dispose).not.toHaveBeenCalled();
+    }
+    const resource = kind === "source" ? state.sources[1] : state.meshes[1],
+      disposalCount = resource.dispose.mock.calls.length;
+    // Exercise late success and failure; either path must complete its cleanup.
+    if (action === "cancel") wait.resolve();
+    else wait.reject(Error("late initialization failure"));
+    await Promise.all([settlement, lateSettlement]);
+    expect(resource.dispose.mock.calls.length).toBeGreaterThan(disposalCount);
+    expect(view.activity()).toEqual({
+      preparing: false,
+      available: action === "cancel",
+    });
+    expect(view.stats().sourceCount).toBe(action === "cancel" ? 1 : 0);
+    if (action === "dispose") expect(view.stats().ownedBytes).toBe(0);
+  },
+);
+
 test("prepared shared source rollback restores meshes and camera, commit releases old leases", async () => {
   const p = packet();
   await install(p);
@@ -636,16 +748,25 @@ test("all cancelled initializer generations stay reserved until the last settles
     abort.abort();
     await rejected;
   }
+  let settled = false;
+  const settlement = view.whenPreparationSettled().then(() => {
+    settled = true;
+  });
   const closing = view.dispose();
   expect(view.dispose()).toBe(closing);
   await closing;
+  expect(settled).toBe(false);
+  expect(view.activity()).toMatchObject({ preparing: true });
   expect(view.stats().sourceCount).toBe(2);
   first.resolve();
   await flush();
   expect(view.stats().sourceCount).toBe(1);
   expect(view.stats().ownedBytes).toBeGreaterThan(8 * 1024 ** 2);
+  expect(settled).toBe(false);
+  expect(view.activity()).toMatchObject({ preparing: true });
   second.reject(Error("late failure"));
-  await flush();
+  await settlement;
+  expect(view.activity()).toMatchObject({ preparing: false });
   expect(view.stats().ownedBytes).toBe(0);
   expect(state.sparks[0].uniforms.ordering.value).toBeNull();
 });

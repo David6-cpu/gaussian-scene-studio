@@ -2115,3 +2115,6 @@ export function parseCompileContext(value: unknown): CompileContext {
     baseSnapshot: base,
   };
 }
+
+/** T9 frozen instances use the same strict runtime contract as saved instances. */
+export { parseInstance as parseSceneInstance };

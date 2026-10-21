@@ -56,7 +56,7 @@ async function stage(page: Page) {
   await expect(page.locator("#asset-selection")).toContainText("river-reed-v1");
 }
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?advanced");
   await expect(page.locator("#status")).toHaveAttribute("data-state", "ready");
   await page.locator("#asset-details > summary").click();
 });

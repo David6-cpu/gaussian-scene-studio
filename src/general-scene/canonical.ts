@@ -256,7 +256,11 @@ export async function geometryKey(
         a.instanceId < b.instanceId ? -1 : a.instanceId > b.instanceId ? 1 : 0,
       ),
       brushes: s.brushes,
-      affectedRegions: s.affectedRegions,
+      affectedRegions: s.affectedRegions.map((a) => ({
+        ...a,
+        tileIds: [...a.tileIds].sort(),
+        instanceIds: [...a.instanceIds].sort(),
+      })),
     },
     assetBindings: bindings,
   });

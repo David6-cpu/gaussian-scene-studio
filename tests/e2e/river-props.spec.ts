@@ -13,7 +13,7 @@ for (const version of [
     page.on("pageerror", (e) => errors.push(String(e)));
     const evidence = async () =>
       JSON.parse((await page.locator("#scene-evidence").textContent())!);
-    await page.goto("/");
+    await page.goto("/?advanced");
     await expect(page.locator("#status")).toHaveAttribute(
       "data-state",
       "ready",

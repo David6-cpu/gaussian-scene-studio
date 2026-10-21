@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 });
 test('double-click entry selects 3B without applying a plan or changing stored history', async ({ page }) => {
   const history = await page.evaluate(() => localStorage.getItem('wetland.plans.v1'));
-  await page.goto('/?planner=3b');
+  await page.goto('/?planner=3b&advanced');
   await expect(page.locator('#status')).toHaveAttribute('data-state', 'ready');
   await expect(page.locator('#plan-backend')).toHaveValue('llama.cpp');
   await expect(page.locator('#plan-model')).toHaveValue(LLAMA_SMALL_MODEL);

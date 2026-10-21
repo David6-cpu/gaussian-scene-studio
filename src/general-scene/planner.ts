@@ -33,11 +33,14 @@ export type PlanningRequest = {
   baseRevisionId: string | null;
   manualOverrides: AtomicConstraint[];
 };
+export type PlanningPhase = "parsing" | "querying" | "planning";
 export type PlannerPorts = {
   library: AssetLibrary;
   transport: GeneralTransport;
   countTokens: TokenCounter;
   now: () => number;
+  /** Observes actual stage entry; failures and returned promises never gate planning. */
+  onPhase?: (phase: PlanningPhase) => void;
 };
 type Trace = {
   stage: GeneralModelRequest["stage"];
@@ -70,6 +73,19 @@ export type PlanningOutcome = PlanningRecord &
         mode: "manual";
       }
   );
+export type GeneralPlanningEvent =
+  | {
+      type: "phase";
+      operationId: string;
+      baseRevisionId: string | null;
+      phase: PlanningPhase;
+    }
+  | {
+      type: "final";
+      operationId: string;
+      baseRevisionId: string | null;
+      outcome: PlanningOutcome;
+    };
 class PlanningError extends Error {
   constructor(
     readonly code: string,
@@ -82,8 +98,8 @@ class PlanningError extends Error {
 function fail(code: string, message: string, path = ""): never {
   throw new PlanningError(code, message, path);
 }
-const PLANNER_VERSION = "general-planner-v1";
-const RULES_VERSION = "general-rules-v1";
+export const PLANNER_VERSION = "general-planner-v1";
+export const RULES_VERSION = "general-rules-v1";
 const planIdentity = (operationId: string, intentDigest: string) =>
   `plan:${operationId.length <= 195 ? operationId : intentDigest}`;
 const same = (a: unknown, b: unknown) => canonicalJson(a) === canonicalJson(b);
@@ -686,6 +702,14 @@ export async function planRequest(
     operation.signal.throwIfAborted();
     if (ports.now() >= deadline) throw Error("规划超过120秒，请使用手工模式");
   };
+  const enterPhase = (phase: PlanningPhase) => {
+    check();
+    try {
+      // Observers are notifications, never another awaited planning dependency.
+      void Promise.resolve(ports.onPhase?.(phase)).catch(() => {});
+    } catch {}
+    check();
+  };
   async function generate(request: GeneralModelRequest): Promise<ModelReply> {
     check();
     if (calls >= L.maxModelRequests)
@@ -828,6 +852,7 @@ export async function planRequest(
     }
   }
   try {
+    enterPhase("parsing");
     intent = await stage(
       {
         stage: "intent",
@@ -850,6 +875,7 @@ export async function planRequest(
     validateIntent(intent, request);
     const effective = effectiveIntent(intent, request);
     check();
+    enterPhase("querying");
     query = queryCandidates(effective, ports.library);
     if (query.issues.length)
       throw new PlanningError(
@@ -881,6 +907,7 @@ export async function planRequest(
       prngVersion: "fnv1a32-v1",
       budgetProfileId: "general-v1",
     };
+    enterPhase("planning");
     draft = await stage(
       {
         stage: "plan",

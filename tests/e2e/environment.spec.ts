@@ -76,7 +76,7 @@ test("local SPZ displays real pixels; cancel restores original, save/reload/reop
   ).toBeGreaterThan(300);
   await page.locator("#environment-cancel").click();
   await expect(page.locator("#environment-canvas")).toBeHidden();
-  expect(await original(page)).toBe(before);
+  await expect.poll(() => original(page), { timeout: 5000 }).toBe(before);
   await preview(page);
   await page.locator("#environment-save").click();
   await expect(page.locator("#environment-status")).toContainText("已保存");
@@ -87,7 +87,7 @@ test("local SPZ displays real pixels; cancel restores original, save/reload/reop
   const path = await backup.path();
   expect(path).toBeTruthy();
   await page.locator("#environment-return").click();
-  expect(await original(page)).toBe(before);
+  await expect.poll(() => original(page), { timeout: 5000 }).toBe(before);
   await page.reload();
   await expect(page.locator("#status")).toHaveAttribute("data-state", "ready");
   await page.locator("#environment-details > summary").click();
@@ -141,7 +141,7 @@ test("storage abort and invalid replacement preserve preview, retry and context-
   await expect(page.locator("#environment-status")).toContainText("显示中断");
   await page.locator("#environment-return").click();
   await expect(page.locator("#environment-canvas")).toBeHidden();
-  expect(await original(page)).toBe(before);
+  await expect.poll(() => original(page), { timeout: 5000 }).toBe(before);
 });
 test("late file read cannot replace a newer import or reopen a cancelled view", async ({
   page,

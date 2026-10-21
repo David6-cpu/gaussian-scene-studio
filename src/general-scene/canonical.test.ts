@@ -229,3 +229,41 @@ test("binary document hashing rejects altered typed-array prototypes", async () 
     /buffer prototype/,
   );
 });
+
+test("affected-region memberships are sets while outer region order and polygon order remain semantic", async () => {
+  const p = parseScenePlan(planFixture()),
+    state = stateFixture();
+  state.groups[0].nextSlot = 2;
+  state.affectedRegions = [
+    {
+      requestedRegion: [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ],
+      effectiveRegion: [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ],
+      tileIds: ["b", "a"],
+      instanceIds: ["grass:1", "grass:0"],
+    },
+  ];
+  const a = parseEditableState(state),
+    b = parseEditableState({
+      ...state,
+      affectedRegions: state.affectedRegions.map((r: any) => ({
+        ...r,
+        tileIds: [...r.tileIds].reverse(),
+        instanceIds: [...r.instanceIds].reverse(),
+      })),
+    });
+  expect(await geometryKey(p, a, bindings())).toBe(
+    await geometryKey(p, b, bindings()),
+  );
+  expect(await documentDigest(a)).not.toBe(await documentDigest(b));
+  expect(a.affectedRegions[0].tileIds).toEqual(["b", "a"]);
+});

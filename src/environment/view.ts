@@ -12,6 +12,12 @@ import {
 } from "../gaussian/spark-lifecycle";
 import { parseCamera, type Camera, type EnvironmentAsset } from "./asset";
 import type { EnvironmentStage } from "./controller";
+import type { Residency } from "../general-scene/controller";
+import {
+  SPARK_BUDGET_OPTIONS,
+  sparkSceneCapacity,
+  sparkRendererBudget,
+} from "../gaussian/spark-budget";
 
 export function createEnvironmentView(
   canvas: HTMLCanvasElement,
@@ -24,7 +30,7 @@ export function createEnvironmentView(
   const camera = new THREE.PerspectiveCamera(50, 1, 0.01, 100000);
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = false;
-  const spark = new SparkRenderer({ renderer, enableLod: false });
+  const spark = new SparkRenderer({ renderer, ...SPARK_BUDGET_OPTIONS });
   scene.add(spark);
   const disposeSpark = deferredSparkDisposal(spark, () => renderer.dispose());
   type Entry = {
@@ -41,6 +47,108 @@ export function createEnvironmentView(
     broken = false,
     raf = 0;
   const released = new WeakSet<Entry>();
+  type Owner = {
+    asset: EnvironmentAsset | null;
+    source?: ExtSplats;
+    entry?: Entry;
+    pending: number;
+    released: boolean;
+    cleanupFailed?: boolean;
+    capacity: number;
+  };
+  const owners = new Set<Owner>();
+  const initializers = new Set<Promise<unknown>>();
+  const stages = new Set<Promise<void>>();
+  let capacity = 0,
+    rendererReleased = false;
+  let resolveReleased!: () => void, rejectReleased!: (error: unknown) => void;
+  let releaseError: unknown;
+  let releaseFailed = false;
+  const releasedPromise = new Promise<void>((resolve, reject) => {
+    resolveReleased = resolve;
+    rejectReleased = reject;
+  });
+  void releasedPromise.catch(() => {});
+  function failRelease(error: unknown, owner?: Owner) {
+    if (owner) owner.cleanupFailed = true;
+    if (releaseFailed) return;
+    releaseFailed = true;
+    releaseError = error;
+    rejectReleased(error);
+    failed(error);
+  }
+  function finishOwner(owner: Owner) {
+    if (!owner.released || owner.pending || owner.cleanupFailed) return;
+    owner.asset = null;
+    owner.source = undefined;
+    if (owner.entry) {
+      // Finished swap closures can remain in the controller; drop their heavy roots.
+      owner.entry.asset = null as unknown as EnvironmentAsset;
+      owner.entry.source = null as unknown as ExtSplats;
+      owner.entry.mesh = null as unknown as SplatMesh;
+      owner.entry = undefined;
+    }
+    owners.delete(owner);
+  }
+  async function whenQuiescent() {
+    do {
+      if (releaseFailed) throw releaseError;
+      await Promise.allSettled([...stages, ...initializers]);
+      await disposeSpark.whenQuiescent();
+      if (releaseFailed) throw releaseError;
+    } while (stages.size || initializers.size || disposeSpark.activity().busy);
+  }
+  const addBuffer = (set: Set<ArrayBuffer>, value: unknown) => {
+    if (
+      ArrayBuffer.isView(value) &&
+      value.buffer instanceof ArrayBuffer &&
+      value.buffer.byteLength
+    )
+      set.add(value.buffer);
+  };
+  function residency(): Residency {
+    const buffers = new Set<ArrayBuffer>();
+    let extraBytes = 0;
+    for (const owner of owners) {
+      if (owner.asset) addBuffer(buffers, owner.asset.spz);
+      const arrays = new Set<ArrayBuffer>();
+      for (const array of owner.source?.extArrays ?? [])
+        addBuffer(arrays, array);
+      for (const value of Object.values(owner.source?.extra ?? {}))
+        addBuffer(arrays, value);
+      for (const array of arrays) buffers.add(array);
+      const actual = [...arrays].reduce((n, b) => n + b.byteLength, 0);
+      const sourceBytes =
+        owner.capacity * [32, 48, 64, 96][owner.asset?.splats.shDegree ?? 3];
+      // Padded Ext/SH GPU textures; pending loader owns its sliced input and decoded output.
+      if (!owner.released || owner.pending || owner.cleanupFailed)
+        extraBytes += sourceBytes;
+      if (owner.pending)
+        extraBytes +=
+          Math.max(0, sourceBytes - actual) +
+          (owner.asset?.spz.byteLength ?? 0);
+    }
+    if (!rendererReleased) {
+      const rendererBuffers = new Set<ArrayBuffer>();
+      addBuffer(rendererBuffers, spark.readback32);
+      addBuffer(rendererBuffers, spark.orderingTexture?.image.data);
+      for (const buffer of rendererBuffers) buffers.add(buffer);
+      extraBytes += Math.max(
+        0,
+        sparkRendererBudget(capacity).reservedBytes -
+          [...rendererBuffers].reduce((n, b) => n + b.byteLength, 0),
+      );
+    }
+    return {
+      buffers: [...buffers],
+      extraBytes,
+      settled:
+        !releaseFailed &&
+        !stages.size &&
+        !initializers.size &&
+        !disposeSpark.activity().busy,
+    };
+  }
   const disposeEntry = (entry: Entry) => {
     entry.mesh.removeFromParent();
     releaseGeneratorMaterial(entry.mesh);
@@ -53,7 +161,17 @@ export function createEnvironmentView(
   const release = (entry: Entry | null) => {
     if (!entry || released.has(entry)) return;
     released.add(entry);
-    disposeEntry(entry);
+    const owner = [...owners].find((value) => value.entry === entry);
+    try {
+      disposeEntry(entry);
+    } catch (error) {
+      failRelease(error, owner);
+    } finally {
+      if (owner) {
+        owner.released = true;
+        finishOwner(owner);
+      }
+    }
   };
   const getCamera = (): Camera => ({
     position: camera.position.toArray() as Camera["position"],
@@ -107,6 +225,9 @@ export function createEnvironmentView(
   canvas.addEventListener("webglcontextlost", lost);
   raf = requestAnimationFrame(tick);
   return {
+    residency,
+    whenQuiescent,
+    whenReleased: () => releasedPromise,
     camera: getCamera,
     reset() {
       if (current) setCamera(current.home);
@@ -143,6 +264,20 @@ export function createEnvironmentView(
           throw Error("环境加载或实际显示超时。");
       };
       check();
+      const sourceCapacity = sparkSceneCapacity([asset.splats.count]);
+      let settleStage!: () => void;
+      const stageWork = new Promise<void>((resolve) => {
+        settleStage = resolve;
+      });
+      stages.add(stageWork);
+      const owner: Owner = {
+        asset,
+        pending: 0,
+        released: false,
+        capacity: sourceCapacity,
+      };
+      owners.add(owner);
+      let mesh!: SplatMesh;
       let source: ExtSplats | undefined,
         entry: Entry | undefined,
         swap: EnvironmentStage | undefined;
@@ -175,20 +310,34 @@ export function createEnvironmentView(
         cleanup: () => void,
       ) => {
         let settled = false;
-        const tracked = work.then(
-          (value) => {
-            settled = true;
-            return value;
-          },
-          (error) => {
-            settled = true;
-            throw error;
-          },
-        );
+        owner.pending++;
+        const tracked = work
+          .then(
+            (value) => {
+              settled = true;
+              return value;
+            },
+            (error) => {
+              settled = true;
+              throw error;
+            },
+          )
+          .finally(() => {
+            try {
+              if (owner.released) cleanup();
+            } catch (error) {
+              failRelease(error, owner);
+            } finally {
+              owner.pending--;
+              initializers.delete(tracked);
+              finishOwner(owner);
+            }
+          });
+        initializers.add(tracked);
         try {
           await Promise.race([tracked, stopped]);
         } catch (error) {
-          if (!settled) void tracked.then(cleanup, cleanup).catch(() => {});
+          if (!settled) void tracked.catch(() => {});
           throw error;
         }
       };
@@ -202,15 +351,15 @@ export function createEnvironmentView(
           lod: false,
           nonLod: true,
         });
-        const loadingSource = source;
-        await initialize(source.initialized, () => loadingSource.dispose());
+        owner.source = source;
+        await initialize(source.initialized, () => owner.source?.dispose());
         check();
         if (
           source.getNumSplats() !== asset.splats.count ||
           source.getNumSh() !== asset.splats.shDegree
         )
           throw Error("实际SPZ解码点数或SH与声明不一致。");
-        const mesh = new SplatMesh({
+        mesh = new SplatMesh({
           extSplats: source,
           enableLod: false,
           editable: false,
@@ -222,8 +371,10 @@ export function createEnvironmentView(
           asset,
           home: { position: [1, 1, 1], target: [0, 0, 0] },
         };
-        const loadingEntry = entry;
-        await initialize(mesh.initialized, () => disposeEntry(loadingEntry));
+        owner.entry = entry;
+        await initialize(mesh.initialized, () => {
+          if (owner.entry) disposeEntry(owner.entry);
+        });
         check();
         // Spark v2/v3 SPZ decoding preserves the supplied coordinates (verified
         // with an asymmetric fixture). Apply the provider transform once here.
@@ -308,6 +459,7 @@ export function createEnvironmentView(
             release(next);
           },
         };
+        capacity = Math.max(capacity, owner.capacity);
         previous?.mesh.removeFromParent();
         scene.add(mesh);
         current = next;
@@ -332,12 +484,29 @@ export function createEnvironmentView(
         signal.removeEventListener("abort", abort);
         if (swap) swap.rollback();
         else if (entry) release(entry);
-        else source?.dispose();
+        else {
+          try {
+            source?.dispose();
+          } catch (error) {
+            failRelease(error, owner);
+          } finally {
+            owner.released = true;
+            finishOwner(owner);
+          }
+        }
         throw e;
       } finally {
         loading = false;
         clearTimeout(timeout);
         if (cancelLoading === stop) cancelLoading = undefined;
+        stages.delete(stageWork);
+        settleStage();
+        // The returned swap keeps only next/previous owners. Do not retain the
+        // completed async call's input/source locals through its closure context.
+        asset = null as unknown as EnvironmentAsset;
+        source = undefined;
+        entry = undefined;
+        mesh = undefined as unknown as SplatMesh;
       }
     },
     dispose() {
@@ -351,7 +520,31 @@ export function createEnvironmentView(
       current = null;
       canvas.removeEventListener("webglcontextlost", lost);
       controls.dispose();
-      void disposeSpark().catch((e) => failed(e));
+      void (async () => {
+        try {
+          await disposeSpark();
+          await whenQuiescent();
+          // Spark 2.3.1 retains these public CPU/texture references after dispose.
+          spark.readback32 = new Uint32Array(0);
+          for (const accumulator of new Set([
+            spark.display,
+            spark.current,
+            ...spark.accumulators,
+          ])) {
+            accumulator.mapping = [];
+            accumulator.readback = null;
+            accumulator.readbackSplats = [];
+          }
+          for (const name of ["ordering", "extSplats", "extSplats2"] as const)
+            if (spark.uniforms[name])
+              (spark.uniforms[name] as { value: unknown }).value = null;
+          scene.clear();
+          rendererReleased = true;
+          resolveReleased();
+        } catch (e) {
+          failRelease(e);
+        }
+      })();
     },
   };
 }

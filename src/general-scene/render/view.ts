@@ -195,6 +195,9 @@ export async function createGeneralView(
     retainedCapacity = 0,
     disposePromise: Promise<void> | undefined;
   const initializers = new Set<Promise<unknown>>();
+  let preparationSettlement:
+    { promise: Promise<void>; resolve: () => void } | undefined;
+  const isPreparing = () => preparing > 0 || initializers.size > 0;
   const finishRendererRelease = () => {
     if (!rendererDisposed || rendererReleased || preparing || initializers.size)
       return;
@@ -218,11 +221,18 @@ export async function createGeneralView(
       (uniform as { value: THREE.Texture | null }).value = null;
     rendererReleased = true;
   };
+  const finishPreparation = () => {
+    finishRendererRelease();
+    if (isPreparing()) return;
+    const settlement = preparationSettlement;
+    preparationSettlement = undefined;
+    settlement?.resolve();
+  };
   const trackInitializer = (work: Promise<unknown>) => {
     initializers.add(work);
     const settled = () => {
       initializers.delete(work);
-      finishRendererRelease();
+      finishPreparation();
     };
     void work.then(settled, settled);
   };
@@ -421,8 +431,22 @@ export async function createGeneralView(
         packet.sources.clear();
         leases.clear();
         preparing--;
-        finishRendererRelease();
+        finishPreparation();
       }
+    },
+    activity() {
+      return { preparing: isPreparing(), available: !closed && !broken };
+    },
+    whenPreparationSettled() {
+      if (!isPreparing()) return Promise.resolve();
+      if (!preparationSettlement) {
+        let resolve!: () => void;
+        const promise = new Promise<void>((done) => {
+          resolve = done;
+        });
+        preparationSettlement = { promise, resolve };
+      }
+      return preparationSettlement.promise;
     },
     getCamera,
     setCamera,

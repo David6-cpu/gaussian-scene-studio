@@ -8,7 +8,7 @@ An undergraduate research prototype developing a general scene pipeline: asset-a
 
 ![Concept diagram: catalog-based construction and local environment import lead to browsing; educational interaction remains planned](docs/images/project-concept.svg)
 
-> **2026-10-13: general pipeline in development.** Tasks 1–7 passed engineering implementation and independent specification/quality review. The supplemental Spark capacity/lifecycle budget fix also passed both reviews. Tasks 8–14, asset/visual admission and real-model end-to-end evaluation remain pending. The ordinary UI still exposes the earlier workbench. [Current progress and evidence scope](docs/validation/general-scene-progress-2026-10-13.md) (Chinese). Existing images show historical previews, not completion of the new pipeline.
+> **2026-10-18: ordinary workbench integration in progress.** Engineering work has reached transaction control through Task 12; Task 13 now exposes “生成自然场景” (Generate a natural scene) on the ordinary homepage. The first Chrome integration run passed 3/3 cases: entry visibility, per-role confirmation and actual draft saving with constructed assets/model replies, and manual preview after a model outage. The full browser matrix remains pending. Task 8 still fails visual acceptance for riverbank steps, soft bands and outlet stripes. Real-model, final visual and performance acceptance remain incomplete. Historical images below do not establish acceptance of this pipeline.
 
 ## Research questions
 
@@ -35,13 +35,21 @@ Our work concerns constraints, knowledge organization, interaction and evaluatio
 
 ## Current progress
 
-Documentation updated **2026-10-13**. Tasks 1–7 cover asset contracts/loading, preview, plan/snapshot contracts, candidate planning, terrain and static-water solving. Spark correction `089d5e8` has passed both independent reviews. Tasks 8–14 remain: Gaussian surfaces, assembly, persistence, editing, transactions, workbench integration and real end-to-end acceptance.
+Documentation updated **2026-10-18**. The general pipeline now includes asset contracts, terrain/static water, constrained assembly, persistence, local editing and transaction control. Task 13 UI integration and cross-mode regression work continue; Task 14 real-asset, local-model, visual and performance evaluation is pending. [Implementation scope](docs/superpowers/plans/2026-10-09-general-gaussian-scene-generation.md) · [Historical progress through October 13](docs/validation/general-scene-progress-2026-10-13.md).
 
-Task 5 has injected-test evidence only. Three local assets remain candidates. The 42 frozen procedural inputs retain 30 successes and 12 rejections; this does not certify scanned patches or appearance. See the [stage report](docs/validation/general-scene-progress-2026-10-13.md).
+**Real asset admission still blocks generation.** The local general catalog contains three candidates and no admitted terrain/water style; an unconfigured catalog is empty. The ordinary UI reports missing resources, and manual settings do not bypass admission. The first three integration cases use isolated, explicitly constructed assets and model replies with real rendering and native IndexedDB. They do not establish real-asset quality or arbitrary-language generation. Task 8 engineering reviews do not override its visual failure.
+
+### Generate a natural scene (Task 13 in development)
+
+The ordinary homepage exposes the Chinese “生成自然场景” panel without an engineering query. Enter a description, choose “解析场景要求”, review requirements, suggestions and missing resources, and confirm procedural sources for each role. An explicit dry request remains distinct from unspecified water. “生成预览” displays a candidate; “使用并保存草稿” commits a local draft while retaining pending visual/performance checks.
+
+A fresh install needs no separate asset library: the bundled [starter library](docs/validation/starter-library.md) (procedural rock, low grass, reed and one terrain/water surface style, redistributable with the project) loads automatically, so a scene can be generated and saved without the local model.
+
+When the model is unavailable, “手工设置” offers manual controls and explicitly states that complete coverage of the original sentence is unverified. Saved-scene controls provide reopening, local editing, undo and export. Local edits require review of the requested region R, effective region H and changed objects before preview. Archives with missing exact dependencies are readonly; unknown versions retain their original bytes for download. These extended UI paths still await the full browser run. [Usage guide](使用说明.md) (Chinese).
 
 ### Existing workbench (compatibility route)
 
-The following table describes earlier implemented functionality, separately from the new general pipeline.
+The compatibility routes below retain their existing formats and historical evidence.
 
 | Area | Implemented | Remaining limits |
 |---|---|---|
@@ -65,13 +73,15 @@ npm ci
 npm run dev
 ```
 
-Open <http://127.0.0.1:4173/>. Use manual controls or the offline planning example without a model. Drag to orbit, right-drag to pan and scroll to zoom. Scene ZIPs can be saved and reopened locally.
+Open <http://127.0.0.1:4173/>. The ordinary natural-scene panel offers description parsing and an explicit manual route. Both require admitted assets and styles; the current real catalog reports missing resources instead of bypassing this requirement.
 
-The environment panel accepts a local World JSON and SPZ. Preview before saving or downloading a `.wetenv` backup. Scene ZIPs and environment backups are different formats. Importing SPZ does not call a generation service.
+The earlier workbench still offers manual parameters and an offline example. Drag to orbit, right-drag to pan and scroll to zoom. Open older scene ZIPs through their compatibility controls.
+
+The environment panel accepts local World JSON and SPZ files. Preview before saving or downloading a `.wetenv` backup. General-scene ZIPs, older scene ZIPs and environment backups use their corresponding import controls. Importing SPZ does not call a generation service.
 
 ### Optional local AI
 
-The tested setup is **Qwen2.5-3B-Instruct Q4_K_M + llama.cpp**. Follow [setup instructions](docs/LOCAL_MODELS.md), then use `/?planner=3b`. The riverbank review candidate is at `/?review=1&planner=3b`. Prompts and UI are primarily Chinese; equivalent English behavior is not validated.
+The earlier workbench was tested with **Qwen2.5-3B-Instruct Q4_K_M + llama.cpp**. Follow [setup instructions](docs/LOCAL_MODELS.md). The ordinary natural-scene panel reuses the local planning service, but its real-model end-to-end evaluation remains pending. The compatibility planning route is `/?planner=3b`; the historical riverbank review candidate is `/?review=1&planner=3b`. Prompts and UI are primarily Chinese; equivalent English behavior is not validated.
 
 No weights or provider keys are bundled. A default-fallback message means the request was not interpreted by a model. Procedural grasses, reeds and added stones cannot silently satisfy a request for scanned assets.
 
@@ -83,7 +93,7 @@ Mac `.command` shortcuts require the original machine's existing runtime and ver
 
 | Path | Responsibility |
 |---|---|
-| `src/general-scene/` | General assets, planning, terrain, water and preview (in development) |
+| `src/general-scene/` | General assets, planning, terrain, water, persistence, editing and ordinary UI (in development) |
 | `src/selection/`, `src/planner/` | Requirements, catalog selection and local model adapters |
 | `src/review-v2/` | Water intent and versioned review contracts |
 | `src/environment/` | SPZ validation, preview lifecycle, storage and backups |
@@ -92,6 +102,8 @@ Mac `.command` shortcuts require the original machine's existing runtime and ver
 | `scripts/`, `tests/` | Local tooling, browser checks and fixtures |
 
 TypeScript, Vite, Three.js, Spark, Vitest and Playwright form the stack, with versions pinned in the lockfile. The planning API runs with Vite's development/preview server; static hosting alone does not provide inference.
+
+The first Task 13 Chrome integration run on 2026-10-18 passed only three cases with constructed assets/model replies and no real-model calls. The expanded browser matrix and a complete workflow video of at least 30 seconds remain pending; discovered tests are not passed tests.
 
 Historical workbench checks, not final acceptance of the new pipeline, on 2026-10-07: **514 unit + eight launcher tests, type checking and production build passed; Chrome functional checks: 110 passed / 15 conditional skips.** Eight legacy visual cases were excluded. This does not claim that all browser tests or visual quality pass. Independent review found an initialization timeout/cancellation issue, fixed with regressions observed failing before the fix and passing afterward.
 
@@ -110,7 +122,7 @@ Browser checks use installed Google Chrome and local port 4173. `npm run test:e2
 
 ## Next development steps
 
-Complete Tasks 8–14 in order: Gaussian terrain/water, constrained assembly, save/reopen, stable local editing, transaction control, ordinary workbench integration, and real local-model, visual and performance acceptance. Preview must succeed before a scene is accepted; legacy modes and archives remain compatible.
+Complete Task 13 reviews, the full ordinary-UI regression and workflow recording, then perform Task 14 real-asset and local-model evaluation. Resolve Task 8 visual failures and asset admission separately. A usable preview or committed draft does not automatically pass visual or performance acceptance. Legacy modes and archives remain compatible.
 
 World Labs and paid generation services, foundation-model training, dynamic water and leaf animation are outside this stage. Knowledge hotspots and teaching evaluation remain later research. Engineering tests do not establish natural appearance or a complete prompt-to-scene workflow.
 
@@ -118,4 +130,4 @@ World Labs and paid generation services, foundation-model training, dynamic wate
 
 Original code has **no selected project-wide open-source license**. Public visibility does not grant blanket MIT terms. Dependencies, models and assets retain their own licenses.
 
-Thanks to Spark, Three.js, Qwen, VeryOS, Marcel Padilla and Loop CE. Distributed assets retain source, CC BY 4.0 attribution and modification notices. Weights, personal saves, provider keys, large raw scans and private logs are excluded. [Third-party notices](THIRD_PARTY_NOTICES.md)
+Thanks to Spark, Three.js, Qwen, VeryOS, Marcel Padilla and Loop CE. Distributed assets retain source, CC BY 4.0 attribution and modification notices. The `starter-library/` examples are generated by this project's own code and may be redistributed with the project. Weights, personal saves, provider keys, large raw scans and private logs are excluded. [Third-party notices](THIRD_PARTY_NOTICES.md)

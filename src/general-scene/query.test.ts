@@ -42,6 +42,10 @@ test("query reports forest without trees rather than substituting grass", async 
     candidates: [],
   });
   expect(q.missing.some((m: any) => m.required)).toBe(true);
+  // Missing reasons are shown to users: name the category in Chinese, not by ID.
+  const reasons = q.missing.map((m: any) => m.reason).join("\n");
+  expect(reasons).toContain("树");
+  expect(reasons).not.toMatch(/符合tree|tree及/);
 });
 test.each(["candidate", "legacy", "rejected"])(
   "%s assets cannot satisfy a generation slot",

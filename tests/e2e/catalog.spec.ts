@@ -5,7 +5,7 @@ const scene = async (page: any) =>
 test("catalog exposes origin and missing snow without applying a scene or writing history", async ({
   page,
 }) => {
-  await page.goto("/?planner=3b");
+  await page.goto("/?planner=3b&advanced");
   await expect(page.locator("#status")).toHaveAttribute("data-state", "ready");
   const initial = await scene(page),
     history = await page.evaluate(() =>
@@ -37,7 +37,7 @@ test("catalog exposes origin and missing snow without applying a scene or writin
 test("snow wording gets an honest API rejection instead of a wetland fallback", async ({
   page,
 }) => {
-  await page.goto("/?planner=3b");
+  await page.goto("/?planner=3b&advanced");
   await expect(page.locator("#status")).toHaveAttribute("data-state", "ready");
   const before = (await scene(page)).recipe;
   await page.locator("#plan-prompt").fill("雪山里三块石头，四丛草");
@@ -54,7 +54,7 @@ test("snow wording gets an honest API rejection instead of a wetland fallback", 
 test("catalog description follows old scene-version choices and keeps query read-only", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?advanced");
   await expect(page.locator("#status")).toHaveAttribute("data-state", "ready");
   await page.locator("#catalog-details summary").click();
   await page.locator("#algorithmVersion").selectOption("f0-riverside-reed-v1");

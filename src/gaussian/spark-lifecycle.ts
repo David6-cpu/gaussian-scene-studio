@@ -38,30 +38,66 @@ export function deferredSparkDisposal(spark: SparkRenderer, after: () => void) {
     rejectDisposed = reject;
   });
   let closing = false,
-    released = false;
+    released = false,
+    finalized = false,
+    failed = false;
+  let failure: unknown;
+  let quiet:
+    | { promise: Promise<void>; resolve(): void; reject(e: unknown): void }
+    | undefined;
+  let probe: ReturnType<typeof setTimeout> | undefined;
+  const scheduled = () =>
+    spark.updateTimeoutId !== undefined || spark.sortTimeoutId !== undefined;
+  const busy = () => pending.size > 0 || scheduled() || (closing && !released);
+  const settleQuiet = () => {
+    if (!quiet) return;
+    if (failed) {
+      clearTimeout(probe);
+      probe = undefined;
+      quiet.reject(failure);
+      quiet = undefined;
+    } else if (!busy()) {
+      clearTimeout(probe);
+      probe = undefined;
+      quiet.resolve();
+      quiet = undefined;
+    } else if (!pending.size && scheduled() && probe === undefined) {
+      // Observe already scheduled Spark work without cancelling it or drawing.
+      // In this app minSortIntervalMs=0/preUpdate=true; this is a timer-boundary guard.
+      probe = setTimeout(() => {
+        probe = undefined;
+        settleQuiet();
+      }, 1);
+    }
+  };
   const finish = () => {
-    if (!closing || released || pending.size) return;
-    released = true;
+    if (!closing || finalized || pending.size) return;
+    finalized = true;
     try {
       spark.dispose();
       after();
+      released = true;
       resolveDisposed();
     } catch (error) {
+      failed = true;
+      failure = error;
       rejectDisposed(error);
     }
+    settleQuiet();
   };
   internal.driveSort = () => {
     if (closing) return Promise.resolve();
     const work = driveSort().finally(() => {
       pending.delete(work);
       finish();
+      settleQuiet();
     });
     pending.add(work);
     // Return the derived promise: errors must propagate even when Spark calls
     // driveSort without awaiting it (recursive and timer-triggered sorts).
     return work;
   };
-  return () => {
+  const release = () => {
     if (closing) return disposed;
     closing = true;
     spark.autoUpdate = false;
@@ -72,6 +108,25 @@ export function deferredSparkDisposal(spark: SparkRenderer, after: () => void) {
     spark.updateTimeoutId = undefined;
     spark.sortTimeoutId = undefined;
     finish();
+    settleQuiet();
     return disposed;
   };
+  return Object.assign(release, {
+    activity: () => ({ busy: busy(), released }),
+    whenQuiescent() {
+      if (failed) return Promise.reject(failure);
+      if (!busy()) return Promise.resolve();
+      if (!quiet) {
+        let resolve!: () => void, reject!: (e: unknown) => void;
+        const promise = new Promise<void>((a, b) => {
+          resolve = a;
+          reject = b;
+        });
+        quiet = { promise, resolve, reject };
+      }
+      const promise = quiet.promise;
+      settleQuiet();
+      return promise;
+    },
+  });
 }

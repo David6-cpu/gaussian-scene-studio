@@ -29,6 +29,10 @@ export type GeneralSwap = {
 };
 export type GeneralView = {
   prepare(packet: RenderPacket, signal: AbortSignal): Promise<GeneralSwap>;
+  /** Preparing includes late cleanup; unavailable means disposed or context-lost. */
+  activity(): { preparing: boolean; readonly available: boolean };
+  /** Resolves once all prepare calls and their initializer cleanup have settled. */
+  whenPreparationSettled(): Promise<void>;
   getCamera(): CameraState;
   setCamera(camera: CameraState): void;
   stats(): RenderStats;
